@@ -42,6 +42,9 @@ GcsServer::GcsServer(const ray::gcs::GcsServerConfig &config,
 GcsServer::~GcsServer() { Stop(); }
 
 void GcsServer::Start() {
+
+  std::cout << "------- GcsServer::Start" << std::endl;
+
   // Init backend client.
   RedisClientOptions redis_client_options(config_.redis_address, config_.redis_port,
                                           config_.redis_password, config_.is_test);
@@ -66,6 +69,8 @@ void GcsServer::Start() {
 }
 
 void GcsServer::DoStart(const GcsInitData &gcs_init_data) {
+
+  std::cout << "------- GcsServer::DoStart" << std::endl;
   // Init gcs resource manager.
   InitGcsResourceManager(gcs_init_data);
 
@@ -245,6 +250,9 @@ void GcsServer::InitGcsPlacementGroupManager(const GcsInitData &gcs_init_data) {
 }
 
 void GcsServer::InitObjectManager(const GcsInitData &gcs_init_data) {
+
+  std::cout << "--------------------- GcsServer::InitObjectManager" << std::endl;
+
   RAY_CHECK(gcs_table_storage_ && gcs_pub_sub_ && gcs_node_manager_);
   gcs_object_manager_.reset(
       new GcsObjectManager(gcs_table_storage_, gcs_pub_sub_, *gcs_node_manager_));

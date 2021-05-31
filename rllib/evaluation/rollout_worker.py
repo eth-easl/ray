@@ -4,7 +4,7 @@ import gym
 import logging
 import pickle
 import platform
-import os
+import os, sys
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, \
     TYPE_CHECKING, Union
 
@@ -757,10 +757,20 @@ class RolloutWorker(ParallelIteratorWorker):
             >>> weights = worker.get_weights()
             >>> worker.set_weights(weights)
         """
+
+        d = weights['default_policy']
+        l = list(d.keys())
+
+
         for pid, w in weights.items():
+            #logger.debug("{}\n".format(pid))
+            #logger.debug("{}\n".format(sys.getsizeof(w)))
+
             self.policy_map[pid].set_weights(w)
         if global_vars:
             self.set_global_vars(global_vars)
+
+
 
     @DeveloperAPI
     def compute_gradients(
@@ -777,6 +787,7 @@ class RolloutWorker(ParallelIteratorWorker):
             >>> batch = worker.sample()
             >>> grads, info = worker.compute_gradients(samples)
         """
+
         if log_once("compute_gradients"):
             logger.info("Compute gradients on:\n\n{}\n".format(
                 summarize(samples)))
@@ -849,10 +860,13 @@ class RolloutWorker(ParallelIteratorWorker):
             >>> batch = worker.sample()
             >>> worker.learn_on_batch(samples)
         """
+
+        #logger.debug("learn_on_batch")
         if log_once("learn_on_batch"):
             logger.info(
                 "Training on concatenated sample batches:\n\n{}\n".format(
                     summarize(samples)))
+
         if isinstance(samples, MultiAgentBatch):
             info_out = {}
             to_fetch = {}
@@ -1090,7 +1104,6 @@ class RolloutWorker(ParallelIteratorWorker):
         preprocessors = {}
         for name, (cls, obs_space, act_space,
                    conf) in sorted(policy_dict.items()):
-            logger.debug("Creating policy for {}".format(name))
             merged_conf = merge_dicts(policy_config, conf)
             merged_conf["num_workers"] = self.num_workers
             merged_conf["worker_index"] = self.worker_index

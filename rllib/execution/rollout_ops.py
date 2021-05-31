@@ -54,6 +54,8 @@ def ParallelRollouts(workers: WorkerSet, *, mode="bulk_sync",
     Updates the STEPS_SAMPLED_COUNTER counter in the local iterator context.
     """
 
+    logger.debug("ParallelRollouts")
+
     # Ensure workers are initially in sync.
     workers.sync_weights()
 
@@ -107,6 +109,8 @@ def AsyncGradients(
     Updates the STEPS_SAMPLED_COUNTER counter and LEARNER_INFO field in the
     local iterator context.
     """
+
+    logger.debug("AsyncGradients")
 
     # Ensure workers are initially in sync.
     workers.sync_weights()
@@ -171,12 +175,12 @@ class ConcatBatches:
             self.count += batch.agent_steps()
 
         if self.count >= self.min_batch_size:
-            if self.count > self.min_batch_size * 2:
-                logger.info("Collected more training samples than expected "
-                            "(actual={}, expected={}). ".format(
-                                self.count, self.min_batch_size) +
-                            "This may be because you have many workers or "
-                            "long episodes in 'complete_episodes' batch mode.")
+            #if self.count > self.min_batch_size * 2:
+               # logger.info("Collected more training samples than expected "
+               #             "(actual={}, expected={}). ".format(
+               #                 self.count, self.min_batch_size) +
+               #             "This may be because you have many workers or "
+               #             "long episodes in 'complete_episodes' batch mode.")
             out = SampleBatch.concat_samples(self.buffer)
             timer = _get_shared_metrics().timers[SAMPLE_TIMER]
             timer.push(time.perf_counter() - self.batch_start_time)

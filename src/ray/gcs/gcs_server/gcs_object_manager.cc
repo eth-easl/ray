@@ -200,6 +200,9 @@ void GcsObjectManager::AddObjectLocationInCache(const ObjectID &object_id,
 
 absl::flat_hash_set<NodeID> GcsObjectManager::GetObjectLocations(
     const ObjectID &object_id) {
+
+  std::cout << "------------------- GcsObjectManager::GetObjectLocations, object id" << object_id << std::endl;
+
   absl::MutexLock lock(&mutex_);
 
   auto *object_locations = GetObjectLocationSet(object_id);
@@ -257,6 +260,9 @@ void GcsObjectManager::RemoveObjectLocationInCache(const ObjectID &object_id,
 
 GcsObjectManager::LocationSet *GcsObjectManager::GetObjectLocationSet(
     const ObjectID &object_id, bool create_if_not_exist) {
+
+  std::cout << "------------------- GcsObjectManager::GetObjectLocationSet, object id" << object_id << std::endl;
+
   LocationSet *object_locations = nullptr;
 
   auto it = object_to_locations_.find(object_id);
@@ -303,6 +309,9 @@ const ObjectLocationInfo GcsObjectManager::GenObjectLocationInfo(
 }
 
 void GcsObjectManager::Initialize(const GcsInitData &gcs_init_data) {
+
+    std::cout << "------------------- GcsObjectManager::Initialize" << std::endl;
+
   absl::flat_hash_map<NodeID, ObjectSet> node_to_objects;
   for (const auto &item : gcs_init_data.Objects()) {
     for (const auto &loc : item.second.locations()) {
@@ -311,6 +320,7 @@ void GcsObjectManager::Initialize(const GcsInitData &gcs_init_data) {
   }
 
   for (auto &item : node_to_objects) {
+    std::cout << item.first << std::endl;
     AddObjectsLocation(item.first, item.second);
   }
 }

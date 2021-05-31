@@ -54,6 +54,9 @@ def jsonify_asdict(o):
 
 # A list of gauges to record and export metrics.
 METRICS_GAUGES = {
+    "toy": Gauge("toy",
+                 "just a toy example",
+                  "bytes", ["ip"]),
     "node_cpu_utilization": Gauge("node_cpu_utilization",
                                   "Total CPU usage on a ray node",
                                   "percentage", ["ip"]),
@@ -67,6 +70,8 @@ METRICS_GAUGES = {
                                 ["ip"]),
     "node_mem_total": Gauge("node_mem_total", "Total memory on a ray node",
                             "bytes", ["ip"]),
+    "node_mem_utilization": Gauge("node_mem_utilization", "Total memory usage on a ray node",
+                            "percentage", ["ip"]),
     "node_gpus_available": Gauge("node_gpus_available",
                                  "Total GPUs available on a ray node",
                                  "percentage", ["ip"]),
@@ -111,8 +116,11 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
     """
 
     def __init__(self, dashboard_agent):
+
         """Initialize the reporter object."""
         super().__init__(dashboard_agent)
+
+
         self._cpu_counts = (psutil.cpu_count(),
                             psutil.cpu_count(logical=False))
         self._ip = ray._private.services.get_node_ip_address()
@@ -218,7 +226,7 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
             self._workers.intersection_update(workers)
             self._workers.update(workers)
             self._workers.discard(psutil.Process())
-            return [
+            l = [
                 w.as_dict(attrs=[
                     "pid",
                     "create_time",
@@ -228,6 +236,7 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
                     "memory_info",
                 ]) for w in self._workers if w.status() != psutil.STATUS_ZOMBIE
             ]
+            return l
 
     @staticmethod
     def _get_raylet_proc():
@@ -303,7 +312,17 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
     def _record_stats(stats):
         records_reported = []
 
+        stats['toy'] = 1200.0
+        #print(stats)
+        #print("Reporter agent record stats!")
+
         ip = stats["ip"]
+
+        toy = Record(
+            gauge=METRICS_GAUGES["toy"],
+            value=float(1200),
+            tags={"ip": ip})
+
         # -- CPU per node --
         cpu_usage = float(stats["cpu"])
         cpu_record = Record(
@@ -319,9 +338,15 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
 
         # -- Mem per node --
         mem_total, mem_available, _, mem_used = stats["mem"]
+        mem_used_percentage = (mem_used * 100.0)/mem_total
+
         mem_used_record = Record(
             gauge=METRICS_GAUGES["node_mem_used"],
             value=mem_used,
+            tags={"ip": ip})
+        mem_utilization_record = Record(
+            gauge=METRICS_GAUGES["node_mem_utilization"],
+            value=mem_used_percentage,
             tags={"ip": ip})
         mem_available_record = Record(
             gauge=METRICS_GAUGES["node_mem_available"],
@@ -428,8 +453,8 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
             records_reported.extend([raylet_cpu_record, raylet_mem_record])
 
         records_reported.extend([
-            cpu_record, cpu_count_record, mem_used_record,
-            mem_available_record, mem_total_record, disk_usage_record,
+            toy, cpu_record, cpu_count_record, mem_used_record,
+            mem_available_record, mem_total_record, mem_utilization_record, disk_usage_record,
             disk_utilization_percentage_record, network_sent_record,
             network_received_record, network_send_speed_record,
             network_receive_speed_record
@@ -450,6 +475,7 @@ class ReporterAgent(dashboard_utils.DashboardAgentModule,
                 reporter_consts.REPORTER_UPDATE_INTERVAL_MS / 1000)
 
     async def run(self, server):
+        print("Inside run!!")
         aioredis_client = await aioredis.create_redis_pool(
             address=self._dashboard_agent.redis_address,
             password=self._dashboard_agent.redis_password)

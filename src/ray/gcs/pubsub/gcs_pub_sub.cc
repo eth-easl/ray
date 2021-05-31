@@ -42,6 +42,9 @@ Status GcsPubSub::Subscribe(const std::string &channel, const std::string &id,
 
 Status GcsPubSub::SubscribeAll(const std::string &channel, const Callback &subscribe,
                                const StatusCallback &done) {
+
+  RAY_LOG(INFO) << "------ GcsPubSub::SubscribeAll" ;
+
   return SubscribeInternal(channel, subscribe, done, true);
 }
 
@@ -65,6 +68,8 @@ Status GcsPubSub::SubscribeInternal(const std::string &channel_name,
                                     const boost::optional<std::string> &id) {
   std::string pattern = GenChannelPattern(channel_name, id);
 
+  RAY_LOG(INFO) << "Channel: " << pattern;
+
   absl::MutexLock lock(&mutex_);
   auto channel = channels_.find(pattern);
   if (channel == channels_.end()) {
@@ -84,6 +89,10 @@ Status GcsPubSub::SubscribeInternal(const std::string &channel_name,
 Status GcsPubSub::ExecuteCommandIfPossible(const std::string &channel_key,
                                            GcsPubSub::Channel &channel) {
   // Process the first command on the queue, if possible.
+
+  RAY_LOG(INFO) << "ExecuteCommandIfPossible. Channel (pattern) key is: " << channel_key;
+
+
   Status status;
   auto &command = channel.command_queue.front();
   if (command.is_subscribe && channel.callback_index == -1) {

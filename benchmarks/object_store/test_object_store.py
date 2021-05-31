@@ -5,9 +5,10 @@ import ray.autoscaler.sdk
 
 from time import sleep, perf_counter
 from tqdm import tqdm
+import time
 
-NUM_NODES = 50
-OBJECT_SIZE = 2**30
+NUM_NODES = 3
+OBJECT_SIZE = 4*2**30
 
 
 def num_alive_nodes():
@@ -20,7 +21,7 @@ def num_alive_nodes():
 
 def scale_to(target):
     while num_alive_nodes() != target:
-        ray.autoscaler.sdk.request_resources(bundles=[{"node": 1}] * target)
+        #ray.autoscaler.sdk.request_resources(bundles=[{"node": 1}] * target)
         print(f"Current # nodes: {num_alive_nodes()}, target: {target}")
         print("Waiting ...")
         sleep(5)
@@ -29,15 +30,16 @@ def scale_to(target):
 def test_object_broadcast():
     scale_to(NUM_NODES)
 
-    @ray.remote(num_cpus=1, resources={"node": 1})
+    @ray.remote(num_cpus=1)
     class Actor:
         def foo(self):
             pass
 
         def sum(self, arr):
+
             return np.sum(arr)
 
-    actors = [Actor.remote() for _ in range(NUM_NODES)]
+    actors = [Actor.remote() for _ in range(3)]
 
     arr = np.ones(OBJECT_SIZE, dtype=np.uint8)
     ref = ray.put(arr)
@@ -45,11 +47,16 @@ def test_object_broadcast():
     for actor in tqdm(actors, desc="Ensure all actors have started."):
         ray.get(actor.foo.remote())
 
+    start_time = time.time()
     result_refs = []
     for actor in tqdm(actors, desc="Broadcasting objects"):
         result_refs.append(actor.sum.remote(ref))
 
     results = ray.get(result_refs)
+    end_time = time.time()
+
+    print("Duration: ", end_time - start_time)
+
     for result in results:
         assert result == OBJECT_SIZE
 

@@ -47,12 +47,12 @@ class PushManager {
   /// \param send_chunk_fn This function will be called with args 0...{num_chunks-1}.
   ///                      The caller promises to call PushManager::OnChunkComplete()
   ///                      once a call to send_chunk_fn finishes.
-  void StartPush(const NodeID &dest_id, const ObjectID &obj_id, int64_t num_chunks,
+  void StartPush(const NodeID &dest_id, const ObjectID &obj_id, int64_t num_chunks,  std::unordered_map<ObjectID, double> &push_objects_start,
                  std::function<void(int64_t)> send_chunk_fn);
 
   /// Called every time a chunk completes to trigger additional sends.
   /// TODO(ekl) maybe we should cancel the entire push on error.
-  void OnChunkComplete(const NodeID &dest_id, const ObjectID &obj_id);
+  void OnChunkComplete(const NodeID &dest_id, const ObjectID &obj_id,  std::unordered_map<ObjectID, double> &push_objects_start, std::unordered_map<ObjectID, double> &read_objects_total);
 
   /// Return the number of chunks currently in flight. For testing only.
   int64_t NumChunksInFlight() const { return chunks_in_flight_; };

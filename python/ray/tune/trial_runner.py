@@ -461,6 +461,8 @@ class TrialRunner:
         """
         self._updated_queue = False
 
+        #logger.debug("Run a step of the trial")
+
         if self.is_finished():
             raise TuneError("Called step when all trials finished?")
         with warn_if_slow("on_step_begin"):
@@ -487,6 +489,7 @@ class TrialRunner:
 
         def _start_trial(trial: Trial) -> bool:
             """Helper function to start trial and call callbacks"""
+            logger.debug("Start the trial {}".format(trial))
             with warn_if_slow("start_trial"):
                 if self.trial_executor.start_trial(trial):
                     self._callbacks.on_trial_start(

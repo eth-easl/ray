@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 def default_execution_plan(workers: WorkerSet, config: TrainerConfigDict):
     # Collects experiences in parallel from multiple RolloutWorker actors.
+
+    logger.debug("default_execution_plan")
     rollouts = ParallelRollouts(workers, mode="bulk_sync")
 
     # Combine experiences batches until we hit `train_batch_size` in size.
@@ -144,6 +146,8 @@ def build_trainer(
             if before_init:
                 before_init(self)
 
+            logger.debug("Before calling _make_workers")
+
             # Creating all workers (excluding evaluation workers).
             self.workers = self._make_workers(
                 env_creator=env_creator,
@@ -159,6 +163,9 @@ def build_trainer(
 
         @override(Trainer)
         def step(self):
+
+            logger.debug("Inside step!")
+
             res = next(self.train_exec_impl)
 
             # self._iteration gets incremented after this function returns,

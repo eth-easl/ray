@@ -19,6 +19,9 @@
 #include "ray/core_worker/core_worker.h"
 #include "src/ray/protobuf/gcs.pb.h"
 
+#include <unistd.h>
+
+
 namespace ray {
 
 void BufferTracker::Record(const ObjectID &object_id, TrackedBuffer *buffer,
@@ -87,6 +90,7 @@ Status CoreWorkerPlasmaStoreProvider::Put(const RayObject &object,
                                           const rpc::Address &owner_address,
                                           bool *object_exists) {
   RAY_CHECK(!object.IsInPlasmaError()) << object_id;
+  //printf("Hello from put!\n");
   std::shared_ptr<Buffer> data;
   RAY_RETURN_NOT_OK(Create(object.GetMetadata(),
                            object.HasData() ? object.GetData()->Size() : 0, object_id,
@@ -113,6 +117,8 @@ Status CoreWorkerPlasmaStoreProvider::Create(const std::shared_ptr<Buffer> &meta
                                              const rpc::Address &owner_address,
                                              std::shared_ptr<Buffer> *data) {
   uint64_t retry_with_request_id = 0;
+  //printf("Hello from Create!!\n");
+
   Status status = store_client_.Create(
       object_id, owner_address, data_size, metadata ? metadata->Data() : nullptr,
       metadata ? metadata->Size() : 0, &retry_with_request_id, data,
@@ -165,15 +171,28 @@ Status CoreWorkerPlasmaStoreProvider::FetchAndGetFromPlasmaStore(
     absl::flat_hash_set<ObjectID> &remaining, const std::vector<ObjectID> &batch_ids,
     int64_t timeout_ms, bool fetch_only, bool in_direct_call, const TaskID &task_id,
     absl::flat_hash_map<ObjectID, std::shared_ptr<RayObject>> *results,
-    bool *got_exception) {
+    bool *got_exception, std::vector<int> &obj_sizes) {
+
+    //RAY_LOG(INFO) << "CoreWorkerPlasmaStoreProvider::FetchAndGetFromPlasmaStore" ;
+
   const auto owner_addresses = reference_counter_->GetOwnerAddresses(batch_ids);
+
+  //auto start = std::chrono::steady_clock::now();
   RAY_RETURN_NOT_OK(raylet_client_->FetchOrReconstruct(
       batch_ids, owner_addresses, fetch_only, /*mark_worker_blocked*/ !in_direct_call,
       task_id));
+  //auto end = std::chrono::steady_clock::now();
+  //std::cout << "Communication with Raylet took: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 
   std::vector<plasma::ObjectBuffer> plasma_results;
+
+  //start = std::chrono::steady_clock::now();
   RAY_RETURN_NOT_OK(store_client_.Get(batch_ids, timeout_ms, &plasma_results,
                                       /*is_from_worker=*/true));
+  //end = std::chrono::steady_clock::now();
+  //std::cout << "Getting the object from Plasma took: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
+
+
 
   // Add successfully retrieved objects to the result map and remove them from
   // the set of IDs to get.
@@ -183,6 +202,7 @@ Status CoreWorkerPlasmaStoreProvider::FetchAndGetFromPlasmaStore(
       std::shared_ptr<TrackedBuffer> data = nullptr;
       std::shared_ptr<Buffer> metadata = nullptr;
       if (plasma_results[i].data && plasma_results[i].data->Size()) {
+        obj_sizes.push_back(plasma_results[i].data->Size());
         // We track the set of active data buffers in active_buffers_. On destruction,
         // the buffer entry will be removed from the set via callback.
         data = std::make_shared<TrackedBuffer>(plasma_results[i].data, buffer_tracker_,
@@ -256,7 +276,13 @@ Status CoreWorkerPlasmaStoreProvider::Get(
     const absl::flat_hash_set<ObjectID> &object_ids, int64_t timeout_ms,
     const WorkerContext &ctx,
     absl::flat_hash_map<ObjectID, std::shared_ptr<RayObject>> *results,
-    bool *got_exception) {
+    bool *got_exception, std::vector<int> &obj_sizes, std::atomic<int64_t> *get_requests) {
+
+  *get_requests += object_ids.size();
+   //for (size_t i=0; i<object_ids.size(); i++)
+   //       usleep(100);
+
+  //RAY_LOG(INFO) << "CoreWorkerPlasmaStoreProvider::Get";
   int64_t batch_size = RayConfig::instance().worker_fetch_request_size();
   std::vector<ObjectID> batch_ids;
   absl::flat_hash_set<ObjectID> remaining(object_ids.begin(), object_ids.end());
@@ -269,10 +295,11 @@ Status CoreWorkerPlasmaStoreProvider::Get(
     for (int64_t i = start; i < batch_size && i < total_size; i++) {
       batch_ids.push_back(id_vector[start + i]);
     }
+    //std::cout << "1st try" << std::endl;
     RAY_RETURN_NOT_OK(
         FetchAndGetFromPlasmaStore(remaining, batch_ids, /*timeout_ms=*/0,
                                    /*fetch_only=*/true, ctx.CurrentTaskIsDirectCall(),
-                                   ctx.GetCurrentTaskID(), results, got_exception));
+                                   ctx.GetCurrentTaskID(), results, got_exception, obj_sizes));
   }
 
   // If all objects were fetched already, return.
@@ -310,10 +337,12 @@ Status CoreWorkerPlasmaStoreProvider::Get(
       RAY_RETURN_NOT_OK(raylet_client_->NotifyDirectCallTaskBlocked(
           RayConfig::instance().release_resources_during_plasma_fetch()));
     }
+    //std::cout << "2nd try" << std::endl;
+
     RAY_RETURN_NOT_OK(
         FetchAndGetFromPlasmaStore(remaining, batch_ids, batch_timeout,
                                    /*fetch_only=*/false, ctx.CurrentTaskIsDirectCall(),
-                                   ctx.GetCurrentTaskID(), results, got_exception));
+                                   ctx.GetCurrentTaskID(), results, got_exception, obj_sizes));
     should_break = timed_out || *got_exception;
 
     if ((previous_size - remaining.size()) < batch_ids.size()) {
@@ -349,6 +378,8 @@ Status CoreWorkerPlasmaStoreProvider::Wait(
     const absl::flat_hash_set<ObjectID> &object_ids, int num_objects, int64_t timeout_ms,
     const WorkerContext &ctx, absl::flat_hash_set<ObjectID> *ready) {
   std::vector<ObjectID> id_vector(object_ids.begin(), object_ids.end());
+
+  RAY_LOG(INFO) << "CoreWorkerPlasmaStoreProvider::Wait" ;
 
   bool should_break = false;
   int64_t remaining_timeout = timeout_ms;

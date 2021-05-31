@@ -23,7 +23,7 @@ def train_and_save_model():
 
     # Train a simple neural net model
     model = tf.keras.models.Sequential([
-        tf.keras.layers.Flatten(input_shape=(28, 28)),
+        tf.keras.layers.Flatten(input_shape=(200, 200)),
         tf.keras.layers.Dense(128, activation="relu"),
         tf.keras.layers.Dropout(0.2),
         tf.keras.layers.Dense(10)
@@ -69,7 +69,7 @@ class TFMnistModel:
 
 # __doc_define_servable_end__
 
-ray.init(num_cpus=8)
+ray.init(num_cpus=8, address="auto")
 # __doc_deploy_begin__
 client = serve.start()
 client.create_backend("tf:v1", TFMnistModel, TRAINED_MODEL_PATH)
@@ -79,7 +79,7 @@ client.create_endpoint("tf_classifier", backend="tf:v1", route="/mnist")
 # __doc_query_begin__
 resp = requests.get(
     "http://localhost:8000/mnist",
-    json={"array": np.random.randn(28 * 28).tolist()})
+    json={"array": np.random.randn(200 * 200).tolist()})
 print(resp.json())
 # {
 #  "prediction": [[-1.504277229309082, ..., -6.793371200561523]],

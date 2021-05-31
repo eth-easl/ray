@@ -540,7 +540,7 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   /// \param[in] object_id Object ID corresponding to the object.
   /// \param[in] pin_object Whether or not to pin the object at the local raylet.
   /// \return Status.
-  Status SealOwned(const ObjectID &object_id, bool pin_object);
+  Status SealOwned(const ObjectID &object_id, bool pin_object, size_t obj_size);
 
   /// Finalize placing an object into the object store. This should be called after
   /// a corresponding `CreateExisting()` call and then writing into the returned buffer.
@@ -550,8 +550,7 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   /// \param[in] owner_address Address of the owner of the object who will be contacted by
   /// the raylet if the object is pinned. If not provided, defaults to this worker.
   /// \return Status.
-  Status SealExisting(const ObjectID &object_id, bool pin_object,
-                      const absl::optional<rpc::Address> &owner_address = absl::nullopt);
+  Status SealExisting(const ObjectID &object_id, bool pin_object, size_t obj_size, const absl::optional<rpc::Address> &owner_address = absl::nullopt);
 
   /// Get a list of objects from the object store. Objects that failed to be retrieved
   /// will be returned as nullptrs.
@@ -1279,6 +1278,19 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   friend class CoreWorkerTest;
 
   std::unique_ptr<rpc::JobConfig> job_config_;
+
+   /// Used for object profiling
+   /// TODO: check for locks
+  std::atomic<int64_t> put_requests;
+  std::atomic<int64_t> get_requests;
+
+  int64_t last_put_requests;
+  int64_t last_get_requests;
+
+  std::vector<int> object_sizes; //TODO[fot]: Add locks when accessing it
+
+  int64_t last_recorded_time_ms_;
+
 };
 
 }  // namespace ray

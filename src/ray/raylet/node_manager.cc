@@ -311,6 +311,8 @@ ray::Status NodeManager::RegisterGcs() {
     const auto &resources_changed =
         [this](const rpc::NodeResourceChange &resource_notification) {
           auto id = NodeID::FromBinary(resource_notification.node_id());
+
+          //std::cout << "node id: " << resource_notification.node_id() << std::endl;
           if (resource_notification.updated_resources_size() != 0) {
             ResourceSet resource_set(
                 MapFromProtobuf(resource_notification.updated_resources()));
@@ -417,7 +419,7 @@ void NodeManager::DestroyWorker(std::shared_ptr<WorkerInterface> worker,
 }
 
 void NodeManager::HandleJobStarted(const JobID &job_id, const JobTableData &job_data) {
-  RAY_LOG(DEBUG) << "HandleJobStarted " << job_id;
+  RAY_LOG(INFO) << "HandleJobStarted " << job_id;
   RAY_CHECK(!job_data.is_dead());
 
   worker_pool_.HandleJobStarted(job_id, job_data.config());
@@ -505,11 +507,11 @@ void NodeManager::HandleRequestObjectSpillage(
     const rpc::RequestObjectSpillageRequest &request,
     rpc::RequestObjectSpillageReply *reply, rpc::SendReplyCallback send_reply_callback) {
   const auto &object_id = ObjectID::FromBinary(request.object_id());
-  RAY_LOG(DEBUG) << "Received RequestObjectSpillage for object " << object_id;
+  RAY_LOG(INFO) << "Received RequestObjectSpillage for object " << object_id;
   local_object_manager_.SpillObjects(
       {object_id}, [object_id, reply, send_reply_callback](const ray::Status &status) {
         if (status.ok()) {
-          RAY_LOG(DEBUG) << "Object " << object_id
+          RAY_LOG(INFO) << "Object " << object_id
                          << " has been spilled, replying to owner";
           reply->set_success(true);
           // TODO(Clark): Add spilled URLs and spilled node ID to owner RPC reply here
@@ -527,7 +529,7 @@ void NodeManager::HandleRestoreSpilledObject(
   const auto spilled_node_id = NodeID::FromBinary(request.spilled_node_id());
   const auto object_url = request.object_url();
   RAY_CHECK(spilled_node_id == self_node_id_);
-  RAY_LOG(DEBUG) << "Restore spilled object request received. Object id: " << object_id
+  RAY_LOG(INFO) << "Restore spilled object request received. Object id: " << object_id
                  << " spilled_node_id: " << self_node_id_
                  << " object url: " << object_url;
   local_object_manager_.AsyncRestoreSpilledObject(object_id, object_url, spilled_node_id,
@@ -944,6 +946,8 @@ void NodeManager::ProcessRegisterClientRequestMessage(
     const std::shared_ptr<ClientConnection> &client, const uint8_t *message_data) {
   client->Register();
 
+  //std::cout << "*************** NodeManager::ProcessRegisterClientRequestMessage" << std::endl;
+
   auto message = flatbuffers::GetRoot<protocol::RegisterClientRequest>(message_data);
   Language language = static_cast<Language>(message->language());
   const JobID job_id = from_flatbuf<JobID>(*message->job_id());
@@ -1175,10 +1179,13 @@ void NodeManager::ProcessDisconnectClientMessage(
 
 void NodeManager::ProcessFetchOrReconstructMessage(
     const std::shared_ptr<ClientConnection> &client, const uint8_t *message_data) {
+
+  RAY_LOG(INFO) << "Raylet at NodeManager::ProcessFetchOrReconstructMessage" ;
   auto message = flatbuffers::GetRoot<protocol::FetchOrReconstruct>(message_data);
   const auto refs =
       FlatbufferToObjectReference(*message->object_ids(), *message->owner_addresses());
   if (message->fetch_only()) {
+    RAY_LOG(INFO) << "fetch_only";
     std::shared_ptr<WorkerInterface> worker = worker_pool_.GetRegisteredWorker(client);
     if (!worker) {
       worker = worker_pool_.GetRegisteredDriver(client);
@@ -1193,6 +1200,7 @@ void NodeManager::ProcessFetchOrReconstructMessage(
     // subscribe to in the task dependency manager. These objects will be
     // pulled from remote node managers. If an object's owner dies, an error
     // will be stored as the object's value.
+    RAY_LOG(INFO) << "reconstruct";
     const TaskID task_id = from_flatbuf<TaskID>(*message->task_id());
     AsyncResolveObjects(client, refs, task_id, /*ray_get=*/true,
                         /*mark_worker_blocked*/ message->mark_worker_blocked());
@@ -1210,6 +1218,7 @@ void NodeManager::ProcessDirectCallTaskBlocked(
 
 void NodeManager::ProcessWaitRequestMessage(
     const std::shared_ptr<ClientConnection> &client, const uint8_t *message_data) {
+
   // Read the data.
   auto message = flatbuffers::GetRoot<protocol::WaitRequest>(message_data);
   std::vector<ObjectID> object_ids = from_flatbuf<ObjectID>(*message->object_ids());
@@ -1269,6 +1278,8 @@ void NodeManager::ProcessWaitRequestMessage(
 
 void NodeManager::ProcessWaitForDirectActorCallArgsRequestMessage(
     const std::shared_ptr<ClientConnection> &client, const uint8_t *message_data) {
+
+
   // Read the data.
   auto message =
       flatbuffers::GetRoot<protocol::WaitForDirectActorCallArgsRequest>(message_data);
@@ -1281,6 +1292,7 @@ void NodeManager::ProcessWaitForDirectActorCallArgsRequestMessage(
   std::unordered_map<ObjectID, rpc::Address> owner_addresses;
   for (const auto &ref : refs) {
     owner_addresses.emplace(ObjectID::FromBinary(ref.object_id()), ref.owner_address());
+
   }
   AsyncResolveObjects(client, refs, TaskID::Nil(), /*ray_get=*/false,
                       /*mark_worker_blocked*/ false);
@@ -1540,6 +1552,7 @@ void NodeManager::AsyncResolveObjects(
     const std::shared_ptr<ClientConnection> &client,
     const std::vector<rpc::ObjectReference> &required_object_refs,
     const TaskID &current_task_id, bool ray_get, bool mark_worker_blocked) {
+
   std::shared_ptr<WorkerInterface> worker = worker_pool_.GetRegisteredWorker(client);
   if (!worker) {
     // The client is a driver. Drivers do not hold resources, so we simply mark
@@ -1634,7 +1647,7 @@ void NodeManager::FinishAssignedActorCreationTask(WorkerInterface &worker,
 void NodeManager::HandleObjectLocal(const ObjectID &object_id) {
   // Notify the task dependency manager that this object is local.
   const auto ready_task_ids = dependency_manager_.HandleObjectLocal(object_id);
-  RAY_LOG(DEBUG) << "Object local " << object_id << ", "
+  RAY_LOG(INFO) << "Object local " << object_id << ", "
                  << " on " << self_node_id_ << ", " << ready_task_ids.size()
                  << " tasks ready";
   cluster_task_manager_->TasksUnblocked(ready_task_ids);
@@ -1801,6 +1814,8 @@ std::string compact_tag_string(const opencensus::stats::ViewDescriptor &view,
 
 bool NodeManager::GetObjectsFromPlasma(const std::vector<ObjectID> &object_ids,
                                        std::vector<std::unique_ptr<RayObject>> *results) {
+
+
   // Pin the objects in plasma by getting them and holding a reference to
   // the returned buffer.
   // NOTE: the caller must ensure that the objects already exist in plasma before
@@ -1831,6 +1846,8 @@ bool NodeManager::GetObjectsFromPlasma(const std::vector<ObjectID> &object_ids,
 void NodeManager::HandlePinObjectIDs(const rpc::PinObjectIDsRequest &request,
                                      rpc::PinObjectIDsReply *reply,
                                      rpc::SendReplyCallback send_reply_callback) {
+
+
   std::vector<ObjectID> object_ids;
   object_ids.reserve(request.object_ids_size());
   const auto &owner_address = request.owner_address();
@@ -1846,8 +1863,10 @@ void NodeManager::HandlePinObjectIDs(const rpc::PinObjectIDsRequest &request,
     send_reply_callback(Status::Invalid("Failed to get objects."), nullptr, nullptr);
     return;
   }
+  //RAY_LOG(INFO) << "Owner Address: " << owner_address;
   local_object_manager_.PinObjects(object_ids, std::move(results), owner_address);
   // Wait for the object to be freed by the owner, which keeps the ref count.
+  // CHANGED! (uncommented)
   local_object_manager_.WaitForObjectFree(owner_address, object_ids);
   send_reply_callback(Status::OK(), nullptr, nullptr);
 }
@@ -1862,6 +1881,9 @@ void NodeManager::HandleGetSystemConfig(const rpc::GetSystemConfigRequest &reque
 void NodeManager::HandleGetNodeStats(const rpc::GetNodeStatsRequest &node_stats_request,
                                      rpc::GetNodeStatsReply *reply,
                                      rpc::SendReplyCallback send_reply_callback) {
+
+  //std::cout << "Inside NodeManager::HandleGetNodeStats()" << std::endl;
+
   cluster_task_manager_->FillPendingActorInfo(reply);
   // Report object spilling stats.
   local_object_manager_.FillObjectSpillingStats(reply);
@@ -1880,12 +1902,15 @@ void NodeManager::HandleGetNodeStats(const rpc::GetNodeStatsRequest &node_stats_
         auto measure_data = view_data->add_measures();
         measure_data->set_tags(compact_tag_string(view.first, measure.first));
         measure_data->set_int_value(measure.second);
+        //std::cout << measure.second << std::endl;
       }
     } else if (view.second.type() == opencensus::stats::ViewData::Type::kDouble) {
       for (const auto &measure : view.second.double_data()) {
         auto measure_data = view_data->add_measures();
         measure_data->set_tags(compact_tag_string(view.first, measure.first));
         measure_data->set_double_value(measure.second);
+        //std::cout << compact_tag_string(view.first, measure.first) << "," << measure.second << std::endl;
+
       }
     } else {
       RAY_CHECK(view.second.type() == opencensus::stats::ViewData::Type::kDistribution);
@@ -1896,11 +1921,15 @@ void NodeManager::HandleGetNodeStats(const rpc::GetNodeStatsRequest &node_stats_
         measure_data->set_distribution_mean(measure.second.mean());
         measure_data->set_distribution_max(measure.second.max());
         measure_data->set_distribution_count(measure.second.count());
+
+        //std::cout << measure.second.min() << std::endl;
+
         for (const auto &bound : measure.second.bucket_boundaries().lower_boundaries()) {
           measure_data->add_distribution_bucket_boundaries(bound);
         }
         for (const auto &count : measure.second.bucket_counts()) {
           measure_data->add_distribution_bucket_counts(count);
+
         }
       }
     }
@@ -1943,6 +1972,7 @@ void NodeManager::HandleGetNodeStats(const rpc::GetNodeStatsRequest &node_stats_
 
 rpc::ObjectStoreStats AccumulateStoreStats(
     std::vector<rpc::GetNodeStatsReply> node_stats) {
+
   rpc::ObjectStoreStats store_stats;
   for (const auto &reply : node_stats) {
     auto cur_store = reply.store_stats();
@@ -2054,6 +2084,7 @@ std::string FormatMemoryInfo(std::vector<rpc::GetNodeStatsReply> node_stats) {
 void NodeManager::HandleFormatGlobalMemoryInfo(
     const rpc::FormatGlobalMemoryInfoRequest &request,
     rpc::FormatGlobalMemoryInfoReply *reply, rpc::SendReplyCallback send_reply_callback) {
+
   auto replies = std::make_shared<std::vector<rpc::GetNodeStatsReply>>();
   auto local_request = std::make_shared<rpc::GetNodeStatsRequest>();
   auto local_reply = std::make_shared<rpc::GetNodeStatsReply>();
@@ -2118,6 +2149,9 @@ void NodeManager::Stop() {
 }
 
 void NodeManager::RecordMetrics() {
+
+  //std::cout << "Inside NodeManager::RecordMetrics()" << std::endl;
+
   recorded_metrics_ = true;
   if (stats::StatsConfig::instance().IsStatsDisabled()) {
     return;
@@ -2126,10 +2160,14 @@ void NodeManager::RecordMetrics() {
   uint64_t current_time = current_time_ms();
   uint64_t duration_ms = current_time - metrics_last_recorded_time_ms_;
 
+  // std::cout << "metrics_num_task_scheduled_: " << metrics_num_task_scheduled_ << " , current_time: " << current_time << std::endl;
+
   // Record average number of tasks information per second.
   stats::AvgNumScheduledTasks.Record((double)metrics_num_task_scheduled_ *
                                      (1000.0 / (double)duration_ms));
   metrics_num_task_scheduled_ = 0;
+
+
   stats::AvgNumExecutedTasks.Record((double)metrics_num_task_executed_ *
                                     (1000.0 / (double)duration_ms));
   metrics_num_task_executed_ = 0;

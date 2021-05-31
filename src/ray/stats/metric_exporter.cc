@@ -25,12 +25,17 @@ void MetricPointExporter::ExportToPoints(
         &view_data,
     const opencensus::stats::MeasureDescriptor &measure_descriptor,
     std::vector<std::string> &keys, std::vector<MetricPoint> &points) {
+
+  //std::cout << "Inside MetricPointExporter::ExportToPoints" << std::endl;
+
   // Return if no raw data found in view map.
   if (view_data.size() == 0) {
     return;
   }
 
   const auto &metric_name = measure_descriptor.name();
+
+  //std::cout << "**********" << metric_name << std::endl;
 
   // NOTE(lingxuan.zlx): No sampling in histogram data, so all points all be filled in.
   std::unordered_map<std::string, std::string> tags;
@@ -74,9 +79,13 @@ void MetricPointExporter::ExportToPoints(
 void MetricPointExporter::ExportViewData(
     const std::vector<std::pair<opencensus::stats::ViewDescriptor,
                                 opencensus::stats::ViewData>> &data) {
+
   std::vector<MetricPoint> points;
+
   // NOTE(lingxuan.zlx): There is no sampling in view data, so all raw metric
   // data will be processed.
+
+  // export data
   for (const auto &datum : data) {
     auto &descriptor = datum.first;
     auto &view_data = datum.second;
@@ -98,10 +107,11 @@ void MetricPointExporter::ExportViewData(
                                                       measure_descriptor, keys, points);
       break;
     default:
-      RAY_LOG(FATAL) << "Unknown view data type.";
+      RAY_LOG(FATAL) << "Given Unknown view data type.";
       break;
     }
   }
+
   metric_exporter_client_->ReportMetrics(points);
 }
 
@@ -115,6 +125,9 @@ OpenCensusProtoExporter::OpenCensusProtoExporter(const int port,
 void OpenCensusProtoExporter::ExportViewData(
     const std::vector<std::pair<opencensus::stats::ViewDescriptor,
                                 opencensus::stats::ViewData>> &data) {
+
+  //std::cout << "Inside OpenCensusProtoExporter::ExportViewData" << std::endl;
+
   // Start converting opencensus data into their protobuf format.
   // The format can be found here
   // https://github.com/census-instrumentation/opencensus-proto/blob/master/src/opencensus/proto/metrics/v1/metrics.proto

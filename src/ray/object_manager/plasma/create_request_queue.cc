@@ -86,6 +86,9 @@ bool CreateRequestQueue::ProcessRequest(std::unique_ptr<CreateRequest> &request)
 }
 
 Status CreateRequestQueue::ProcessRequests() {
+
+  RAY_LOG(INFO) << "********************** Inside CreateRequestQueue::ProcessRequests()";
+
   while (!queue_.empty()) {
     auto request_it = queue_.begin();
     auto create_ok = ProcessRequest(*request_it);

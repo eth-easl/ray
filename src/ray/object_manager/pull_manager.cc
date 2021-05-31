@@ -26,14 +26,14 @@ uint64_t PullManager::Pull(const std::vector<rpc::ObjectReference> &object_ref_b
                            std::vector<rpc::ObjectReference> *objects_to_locate) {
   auto bundle_it =
       pull_request_bundles_.emplace(next_req_id_++, std::move(object_ref_bundle)).first;
-  RAY_LOG(DEBUG) << "Start pull request " << bundle_it->first
+  RAY_LOG(INFO) << "Start pull request " << bundle_it->first
                  << ". Bundle size: " << bundle_it->second.objects.size();
 
   for (const auto &ref : object_ref_bundle) {
     auto obj_id = ObjectRefToId(ref);
     auto it = object_pull_requests_.find(obj_id);
     if (it == object_pull_requests_.end()) {
-      RAY_LOG(DEBUG) << "Pull of object " << obj_id;
+      RAY_LOG(INFO) << "Pull of object " << obj_id;
       // We don't have an active pull for this object yet. Ask the caller to
       // send us notifications about the object's location.
       objects_to_locate->push_back(ref);
@@ -42,6 +42,8 @@ uint64_t PullManager::Pull(const std::vector<rpc::ObjectReference> &object_ref_b
       it = object_pull_requests_
                .emplace(obj_id, ObjectPullRequest(/*next_pull_time=*/get_time_()))
                .first;
+      object_pull_requests_all_.emplace(obj_id, ObjectPullRequest(/*next_pull_time=*/get_time_()));
+
     } else {
       if (it->second.object_size_set) {
         bundle_it->second.RegisterObjectSize(it->second.object_size);
@@ -118,6 +120,10 @@ void PullManager::DeactivatePullBundleRequest(
 }
 
 void PullManager::UpdatePullsBasedOnAvailableMemory(size_t num_bytes_available) {
+
+//RAY_LOG(INFO) << "PullManager::UpdatePullsBasedOnAvailableMemory from " << self_node_id_ ;
+
+
   if (num_bytes_available_ != num_bytes_available) {
     RAY_LOG(DEBUG) << "Updating pulls based on available memory: " << num_bytes_available;
   }
@@ -274,6 +280,10 @@ void PullManager::OnLocationChange(const ObjectID &object_id,
                                    const std::unordered_set<NodeID> &client_ids,
                                    const std::string &spilled_url,
                                    const NodeID &spilled_node_id, size_t object_size) {
+
+
+  // RAY_LOG(INFO) << "PullManager::OnLocationChange from " << self_node_id_;
+
   // Exit if the Pull request has already been fulfilled or canceled.
   auto it = object_pull_requests_.find(object_id);
   if (it == object_pull_requests_.end()) {
@@ -314,6 +324,9 @@ void PullManager::OnLocationChange(const ObjectID &object_id,
 }
 
 void PullManager::TryToMakeObjectLocal(const ObjectID &object_id) {
+
+  RAY_LOG(INFO) << "Inside TryToMakeObjectLocal";
+
   if (object_is_local_(object_id)) {
     return;
   }
@@ -349,6 +362,9 @@ void PullManager::TryToMakeObjectLocal(const ObjectID &object_id) {
   // If external storage is a distributed storage, we always try restoring from it without
   // sending RPCs.
   if (!request.spilled_url.empty()) {
+
+    RAY_LOG(INFO) << "About to restore object " << object_id;
+
     const auto spilled_node_id = request.spilled_node_id;
     restore_spilled_object_(
         object_id, request.spilled_url, spilled_node_id,
@@ -440,6 +456,9 @@ void PullManager::UpdateRetryTimer(ObjectPullRequest &request) {
 }
 
 void PullManager::Tick() {
+
+//RAY_LOG(INFO) << "PullManager::Tick from " << self_node_id_ ;
+
   absl::MutexLock lock(&active_objects_mu_);
   for (auto &pair : active_object_pull_requests_) {
     const auto &object_id = pair.first;
@@ -448,6 +467,8 @@ void PullManager::Tick() {
 }
 
 int PullManager::NumActiveRequests() const { return object_pull_requests_.size(); }
+int PullManager::NumAllRequests() const { return object_pull_requests_all_.size(); }
+
 
 bool PullManager::IsObjectActive(const ObjectID &object_id) const {
   absl::MutexLock lock(&active_objects_mu_);

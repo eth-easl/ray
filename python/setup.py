@@ -412,6 +412,8 @@ if __name__ == "__api__":
     api_main(*sys.argv)
 
 if __name__ == "__main__":
+
+    print("START SETUP!!!!!!!")
     import setuptools
     import setuptools.command.build_ext
 

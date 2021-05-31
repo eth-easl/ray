@@ -494,6 +494,7 @@ def start_ray_process(command,
         Information about the process that was started including a handle to
             the process that was started.
     """
+
     # Detect which flags are set through environment variables.
     valgrind_env_var = f"RAY_{process_type.upper()}_VALGRIND"
     if os.environ.get(valgrind_env_var) == "1":
@@ -604,6 +605,7 @@ def start_ray_process(command,
         preexec_fn=preexec_fn if sys.platform != "win32" else None,
         creationflags=CREATE_SUSPENDED if win32_fate_sharing else 0)
 
+
     if win32_fate_sharing:
         try:
             ray.utils.set_kill_child_on_death_win32(process)
@@ -619,6 +621,7 @@ def start_ray_process(command,
             except AttributeError:
                 return str(stream)
         return None
+
 
     return ProcessInfo(
         process=process,

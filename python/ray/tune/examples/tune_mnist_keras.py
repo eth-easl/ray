@@ -49,7 +49,7 @@ if __name__ == "__main__":
     from ray.tune.schedulers import AsyncHyperBandScheduler
     mnist.load_data()  # we do this on the driver because it's not threadsafe
 
-    ray.init(num_cpus=4 if args.smoke_test else None)
+    ray.init(address="auto")
     sched = AsyncHyperBandScheduler(
         time_attr="training_iteration", max_t=400, grace_period=20)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         },
         num_samples=10,
         resources_per_trial={
-            "cpu": 2,
+            "cpu": 1,
             "gpu": 0
         },
         config={

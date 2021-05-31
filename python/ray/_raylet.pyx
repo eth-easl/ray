@@ -307,6 +307,7 @@ cdef prepare_args(
                     raise Exception("Can't transfer {} data to {}".format(
                         metadata_fields[0], language))
             size = serialized_arg.total_bytes
+            #print("serialize args!, value is: ", arg,  " with serialized size: ", size)
 
             # TODO(edoakes): any objects containing ObjectRefs are spilled to
             # plasma here. This is inefficient for small objects, but inlined
@@ -925,6 +926,7 @@ cdef class CoreWorker:
     def get_objects(self, object_refs, TaskID current_task_id,
                     int64_t timeout_ms=-1,
                     plasma_objects_only=False):
+
         cdef:
             c_vector[shared_ptr[CRayObject]] results
             CTaskID c_task_id = current_task_id.native()
@@ -934,7 +936,8 @@ cdef class CoreWorker:
             check_status(CCoreWorkerProcess.GetCoreWorker().Get(
                 c_object_ids, timeout_ms, &results, _plasma_objects_only))
 
-        return RayObjectsToDataMetadataPairs(results)
+        res = RayObjectsToDataMetadataPairs(results)
+        return res
 
     def get_if_local(self, object_refs):
         """Get objects from local plasma store directly
@@ -974,6 +977,7 @@ cdef class CoreWorker:
                              metadata, data_size, contained_ids,
                              c_object_id, data))
         else:
+            print("Call CreateExisting for the object with ref: ", object_ref)
             c_object_id[0] = object_ref.native()
             if owner_address is None:
                 c_owner_address = CCoreWorkerProcess.GetCoreWorker(
@@ -1013,33 +1017,51 @@ cdef class CoreWorker:
             int64_t put_threshold
             c_bool put_small_object_in_memory_store
             c_vector[CObjectID] c_object_id_vector
+            int64_t obj_bytes
+
         # TODO(suquark): This method does not support put objects to
         # in memory store currently.
         metadata_buf = string_to_buffer(metadata)
+        start = time.time()
         object_already_exists = self._create_put_buffer(
             metadata_buf, data_size, object_ref,
             ObjectRefsToVector([]),
             &c_object_id, &data_buf, owner_address)
+        end = time.time()
+        print("_create_put_buffer took: ", (end-start)*1000, " ms")
         if object_already_exists:
             logger.debug("Object already exists in 'put_file_like_object'.")
             return
+
+        start = time.time()
         data = Buffer.make(data_buf)
         view = memoryview(data)
         index = 0
         while index < data_size:
             bytes_read = file_like.readinto(view[index:])
             index += bytes_read
+        obj_bytes=data_size
+        end = time.time()
+        print("read object from file took: ", (end-start)*1000, " ms")
+
+        start = time.time()
         with nogil:
             # Using custom object refs is not supported because we
             # can't track their lifecycle, so we don't pin the object
             # in this case.
+
+            # CHANGED: pin_object was false
             check_status(
                 CCoreWorkerProcess.GetCoreWorker().SealExisting(
-                            c_object_id, pin_object=False))
+                            c_object_id, pin_object=False, obj_size=obj_bytes))
+        end = time.time()
+        print("Sealing object took: ", (end-start)*1000, " ms")
+
 
     def put_serialized_object(self, serialized_object,
                               ObjectRef object_ref=None,
                               c_bool pin_object=True):
+
         cdef:
             CObjectID c_object_id
             shared_ptr[CBuffer] data
@@ -1047,21 +1069,36 @@ cdef class CoreWorker:
             int64_t put_threshold
             c_bool put_small_object_in_memory_store
             c_vector[CObjectID] c_object_id_vector
+            int64_t obj_bytes
 
         metadata = string_to_buffer(serialized_object.metadata)
         put_threshold = RayConfig.instance().max_direct_call_object_size()
         put_small_object_in_memory_store = (
             RayConfig.instance().put_small_object_in_memory_store())
         total_bytes = serialized_object.total_bytes
+
+        #print('refs: ', serialized_object.contained_object_refs)
+
+        start = time.time()
         object_already_exists = self._create_put_buffer(
             metadata, total_bytes, object_ref,
             ObjectRefsToVector(serialized_object.contained_object_refs),
             &c_object_id, &data)
+        end = time.time()
+        #print("Plasma Create Owned took: ", (end-start)*1000, " ms")
+
+        #print("in put_serialized_object! put threshold is: ", put_threshold)
+        #print("Object exists: ", object_already_exists)
+        #print("------------------- In put_serialized_object! Object size: ", total_bytes)
 
         if not object_already_exists:
+            #print("Object not existing. Add it")
+            start = time.time()
             if total_bytes > 0:
                 (<SerializedObject>serialized_object).write_to(
                     Buffer.make(data))
+            end = time.time()
+            #print("Memcpy took: ", (end-start)*1000, " ms")
             if self.is_local_mode or (put_small_object_in_memory_store
                and <int64_t>total_bytes < put_threshold):
                 c_object_id_vector.push_back(c_object_id)
@@ -1069,19 +1106,20 @@ cdef class CoreWorker:
                         CRayObject(data, metadata, c_object_id_vector),
                         c_object_id_vector, c_object_id))
             else:
+                obj_bytes = total_bytes
                 with nogil:
                     if object_ref is None:
                         check_status(
                             CCoreWorkerProcess.GetCoreWorker().SealOwned(
                                         c_object_id,
-                                        pin_object))
+                                        pin_object, obj_bytes))
                     else:
                         # Using custom object refs is not supported because we
                         # can't track their lifecycle, so we don't pin the
                         # object in this case.
                         check_status(
                             CCoreWorkerProcess.GetCoreWorker().SealExisting(
-                                        c_object_id, pin_object=False))
+                                        c_object_id, pin_object=False, obj_size=obj_bytes))
 
         return c_object_id.Binary()
 

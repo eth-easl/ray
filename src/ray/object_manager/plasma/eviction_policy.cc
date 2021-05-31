@@ -26,10 +26,12 @@ namespace plasma {
 void LRUCache::Add(const ObjectID &key, int64_t size) {
   auto it = item_map_.find(key);
   RAY_CHECK(it == item_map_.end());
-  // Note that it is important to use a list so the iterators stay valid.
-  item_list_.emplace_front(key, size);
-  item_map_.emplace(key, item_list_.begin());
-  used_capacity_ += size;
+  if (it == item_map_.end()) {
+    // Note that it is important to use a list so the iterators stay valid.
+    item_list_.emplace_front(key, size);
+    item_map_.emplace(key, item_list_.begin());
+    used_capacity_ += size;
+  }
 }
 
 int64_t LRUCache::Remove(const ObjectID &key) {
@@ -123,12 +125,20 @@ void EvictionPolicy::ClientDisconnected(Client *client) {}
 int64_t EvictionPolicy::RequireSpace(int64_t size,
                                      std::vector<ObjectID> *objects_to_evict) {
   // Check if there is enough space to create the object.
+  // RAY_LOG(INFO) << "Inside  EvictionPolicy::RequireSpace. Object size is  " << size;
+  // RAY_LOG(INFO) << "PlasmaAllocator::Allocated() size is  " << PlasmaAllocator::Allocated();
+  // RAY_LOG(INFO) << "PlasmaAllocator::GetFootprintLimit() size is  " << PlasmaAllocator::GetFootprintLimit();
+
   int64_t required_space =
       PlasmaAllocator::Allocated() + size - PlasmaAllocator::GetFootprintLimit();
+
+  //RAY_LOG(INFO) << "required_space(before) is " << required_space;
+
   // Try to free up at least as much space as we need right now but ideally
   // up to 20% of the total capacity.
   int64_t space_to_free =
       std::max(required_space, PlasmaAllocator::GetFootprintLimit() / 5);
+  RAY_LOG(DEBUG) << "Object size is " << size << ", required space is " << required_space;
   RAY_LOG(DEBUG) << "not enough space to create this object, so evicting objects";
   // Choose some objects to evict, and update the return pointers.
   int64_t num_bytes_evicted = ChooseObjectsToEvict(space_to_free, objects_to_evict);

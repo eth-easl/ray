@@ -150,10 +150,13 @@ class SerializationContext:
     def _deserialize_pickle5_data(self, data):
         try:
             in_band, buffers = unpack_pickle5_buffers(data)
+
+            # print("------------------ _deserialize_pickle5_data:", in_band, buffers)
             if len(buffers) > 0:
                 obj = pickle.loads(in_band, buffers=buffers)
             else:
                 obj = pickle.loads(in_band)
+            # print('obj:', obj)
         # cloudpickle does not provide error types
         except pickle.pickle.PicklingError:
             raise DeserializationError()
@@ -161,6 +164,8 @@ class SerializationContext:
 
     def _deserialize_msgpack_data(self, data, metadata_fields):
         msgpack_data, pickle5_data = split_buffer(data)
+
+        # print("Inside _deserialize_msgpack_data: ", msgpack_data, pickle5_data)
 
         if metadata_fields[0] == ray_constants.OBJECT_METADATA_TYPE_PYTHON:
             python_objects = self._deserialize_pickle5_data(pickle5_data)
@@ -176,6 +181,7 @@ class SerializationContext:
                                               _python_deserializer)
         except Exception:
             raise DeserializationError()
+        # print('obj to return: ', obj)
         return obj
 
     def _deserialize_object(self, data, metadata, object_ref):
@@ -185,6 +191,7 @@ class SerializationContext:
                     ray_constants.OBJECT_METADATA_TYPE_CROSS_LANGUAGE,
                     ray_constants.OBJECT_METADATA_TYPE_PYTHON
             ]:
+                # print("PYTHON OBJECT")
                 return self._deserialize_msgpack_data(data, metadata_fields)
             # Check if the object should be returned as raw bytes.
             if metadata_fields[0] == ray_constants.OBJECT_METADATA_TYPE_RAW:
@@ -231,6 +238,8 @@ class SerializationContext:
             return PlasmaObjectNotAvailable
 
     def deserialize_objects(self, data_metadata_pairs, object_refs):
+
+        #print("Inside deserialize_objects!")
         assert len(data_metadata_pairs) == len(object_refs)
         results = []
         for object_ref, (data, metadata) in zip(object_refs,
@@ -239,6 +248,7 @@ class SerializationContext:
             self.set_outer_object_ref(object_ref)
             obj = None
             try:
+                # print(data, metadata, object_ref)
                 obj = self._deserialize_object(data, metadata, object_ref)
             except Exception as e:
                 logger.exception(e)
@@ -249,6 +259,9 @@ class SerializationContext:
         return results
 
     def _serialize_to_pickle5(self, metadata, value):
+
+        #print("--------- _serialize_to_pickle5 ", value)
+
         writer = Pickle5Writer()
         # TODO(swang): Check that contained_object_refs is empty.
         try:
@@ -259,6 +272,7 @@ class SerializationContext:
             self.get_and_clear_contained_object_refs()
             raise e
         finally:
+            #print("do set_out_of_band_serialization")
             self.set_out_of_band_serialization()
 
         return Pickle5SerializedObject(
@@ -269,6 +283,8 @@ class SerializationContext:
         # Only RayTaskError is possible to be serialized here. We don't
         # need to deal with other exception types here.
         contained_object_refs = []
+
+        # print("--------- _serialize_to_msgpack ", value)
 
         if isinstance(value, RayTaskError):
             metadata = str(
@@ -293,11 +309,15 @@ class SerializationContext:
             return index
 
         msgpack_data = MessagePackSerializer.dumps(value, _python_serializer)
+        # print(msgpack_data)
 
         if python_objects:
+            #print("----- python objects: ", len(python_objects))
             metadata = ray_constants.OBJECT_METADATA_TYPE_PYTHON
             pickle5_serialized_object = \
                 self._serialize_to_pickle5(metadata, python_objects)
+            #print("----- pickle5_serialized_object", pickle5_serialized_object)
+
         else:
             pickle5_serialized_object = None
 
@@ -306,15 +326,20 @@ class SerializationContext:
                                            pickle5_serialized_object)
 
     def serialize(self, value):
+
+        #print("--------- Serialize!! ")
         """Serialize an object.
 
         Args:
             value: The value to serialize.
         """
         if isinstance(value, bytes):
+            #print("object is bytes")
             # If the object is a byte array, skip serializing it and
             # use a special metadata to indicate it's raw binary. So
             # that this object can also be read by Java.
             return RawSerializedObject(value)
         else:
+            #print("_serialize_to_msgpack")
+
             return self._serialize_to_msgpack(value)

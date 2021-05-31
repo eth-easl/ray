@@ -162,6 +162,7 @@ cdef class MessagePackSerializer(object):
             return msgpack.dumps(o, default=_default,
                                  use_bin_type=True, strict_types=True)
         except ValueError as ex:
+            print("----- Got ValueError")
             # msgpack can't handle recursive objects, so we serialize them by
             # python serializer, e.g. pickle.
             return msgpack.dumps(_default(o), default=_default,

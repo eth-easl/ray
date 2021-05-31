@@ -1,6 +1,7 @@
 import json
 
 import starlette.requests
+import sys
 
 
 def build_starlette_request(scope, serialized_body: bytes):
@@ -9,6 +10,8 @@ def build_starlette_request(scope, serialized_body: bytes):
     This function is intended to be used immediately before task invocation
     happens.
     """
+
+    # print("serialized body size: ", sys.getsizeof(serialized_body))
 
     # Simulates receiving HTTP body from TCP socket.  In reality, the body has
     # already been streamed in chunks and stored in serialized_body.

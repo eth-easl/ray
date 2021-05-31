@@ -98,6 +98,7 @@ void GetRequest::Set(const ObjectID &object_id, std::shared_ptr<RayObject> objec
   if (objects_.size() == num_objects_ ||
       (abort_if_any_object_is_exception_ && object->IsException() &&
        !object->IsInPlasmaError())) {
+    //std::cout << "set is_ready_" << std::endl;
     is_ready_ = true;
     cv_.notify_all();
   }
@@ -164,6 +165,9 @@ std::shared_ptr<RayObject> CoreWorkerMemoryStore::GetOrPromoteToPlasma(
 }
 
 bool CoreWorkerMemoryStore::Put(const RayObject &object, const ObjectID &object_id) {
+
+  //std::cout << "Inside  CoreWorkerMemoryStore::Put for object " << object_id << std::endl;
+
   std::vector<std::function<void(std::shared_ptr<RayObject>)>> async_callbacks;
   auto object_entry = std::make_shared<RayObject>(object.GetData(), object.GetMetadata(),
                                                   object.GetNestedIds(), true);
@@ -196,6 +200,7 @@ bool CoreWorkerMemoryStore::Put(const RayObject &object, const ObjectID &object_
       promoted_to_plasma_.erase(promoted_it);
     }
 
+
     bool should_add_entry = true;
     auto object_request_iter = object_get_requests_.find(object_id);
     if (object_request_iter != object_get_requests_.end()) {
@@ -212,6 +217,8 @@ bool CoreWorkerMemoryStore::Put(const RayObject &object, const ObjectID &object_
     if (ref_counter_ != nullptr && !ref_counter_->HasReference(object_id)) {
       should_add_entry = false;
     }
+
+
 
     if (should_add_entry) {
       // If there is no existing get request, then add the `RayObject` to map.
@@ -266,6 +273,8 @@ Status CoreWorkerMemoryStore::GetImpl(const std::vector<ObjectID> &object_ids,
       const auto &object_id = object_ids[i];
       auto iter = objects_.find(object_id);
       if (iter != objects_.end()) {
+
+        //std::cout << "object: " << object_id << " is ready at " << iter->second <<  std::endl;
         iter->second->SetAccessed();
         (*results)[i] = iter->second;
         if (remove_after_get) {
@@ -275,6 +284,8 @@ Status CoreWorkerMemoryStore::GetImpl(const std::vector<ObjectID> &object_ids,
         }
         count += 1;
       } else {
+
+        //std::cout << "object: " << object_id << " not ready" <<  std::endl;
         remaining_ids.insert(object_id);
       }
     }
@@ -304,8 +315,7 @@ Status CoreWorkerMemoryStore::GetImpl(const std::vector<ObjectID> &object_ids,
   }
 
   // Only send block/unblock IPCs for non-actor tasks on the main thread.
-  bool should_notify_raylet =
-      (raylet_client_ != nullptr && ctx.ShouldReleaseResourcesOnBlockingCalls());
+  bool should_notify_raylet = (raylet_client_ != nullptr && ctx.ShouldReleaseResourcesOnBlockingCalls());
 
   // Wait for remaining objects (or timeout).
   if (should_notify_raylet) {
@@ -393,10 +403,12 @@ Status CoreWorkerMemoryStore::Get(
   for (size_t i = 0; i < id_vector.size(); i++) {
     if (result_objects[i] != nullptr) {
       (*results)[id_vector[i]] = result_objects[i];
+      // std::cout << id_vector[i] << "," << result_objects[i] << std::endl;
       if (result_objects[i]->IsException() && !result_objects[i]->IsInPlasmaError()) {
         // Can return early if an object value contains an exception.
         // InPlasmaError does not count as an exception because then the object
         // value should then be found in plasma.
+        // std::cout << "is exception" << std::endl;
         *got_exception = true;
       }
     }

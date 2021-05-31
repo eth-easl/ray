@@ -64,6 +64,10 @@ Status ServiceBasedJobInfoAccessor::AsyncMarkFinished(const JobID &job_id,
 
 Status ServiceBasedJobInfoAccessor::AsyncSubscribeAll(
     const SubscribeCallback<JobID, JobTableData> &subscribe, const StatusCallback &done) {
+
+
+  RAY_LOG(INFO) << "------ ServiceBasedJobInfoAccessor::AsyncSubscribeAll" ;
+
   RAY_CHECK(subscribe != nullptr);
   fetch_all_data_operation_ = [this, subscribe](const StatusCallback &done) {
     auto callback = [subscribe, done](
@@ -1207,6 +1211,8 @@ Status ServiceBasedObjectInfoAccessor::AsyncSubscribeToLocations(
       object_location_change.ParseFromString(data);
       subscribe(object_id, {object_location_change});
     };
+
+    RAY_LOG(INFO) << "Subscibe to locations. Object id: " << object_id ;
     return client_impl_->GetGcsPubSub().Subscribe(OBJECT_CHANNEL, object_id.Hex(),
                                                   on_subscribe, subscribe_done);
   };

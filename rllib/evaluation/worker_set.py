@@ -86,6 +86,8 @@ class WorkerSet:
             else:
                 spaces = None
 
+            logger.debug("Before calling _local_worker")
+
             # Always create a local worker.
             self._local_worker = self._make_worker(
                 cls=RolloutWorker,
@@ -108,6 +110,7 @@ class WorkerSet:
 
     def sync_weights(self) -> None:
         """Syncs weights of remote workers with the local worker."""
+        logger.debug("Inside sync_weights")
         if self.remote_workers():
             weights = ray.put(self.local_worker().get_weights())
             for e in self.remote_workers():
@@ -125,6 +128,7 @@ class WorkerSet:
             "num_gpus": self._remote_config["num_gpus_per_worker"],
             "resources": self._remote_config["custom_resources_per_worker"],
         }
+        logger.debug("Add remote rollout workers")
         cls = RolloutWorker.as_remote(**remote_args).remote
         self._remote_workers.extend([
             self._make_worker(

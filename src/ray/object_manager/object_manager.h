@@ -100,6 +100,8 @@ class ObjectManagerInterface {
   virtual uint64_t Pull(const std::vector<rpc::ObjectReference> &object_refs) = 0;
   virtual void CancelPull(uint64_t request_id) = 0;
   virtual bool PullRequestActiveOrWaitingForMetadata(uint64_t request_id) const = 0;
+  virtual void AddLocalGet() = 0;
+  virtual void AddRemoteGet() = 0;
   virtual ~ObjectManagerInterface(){};
 };
 
@@ -262,6 +264,12 @@ class ObjectManager : public ObjectManagerInterface,
   /// \param object_refs The bundle of objects that must be made local.
   /// \return A request ID that can be used to cancel the request.
   uint64_t Pull(const std::vector<rpc::ObjectReference> &object_refs) override;
+
+   /// Increase local get request counter
+  void AddLocalGet();
+
+  /// Increase remote get request counter
+  void AddRemoteGet();
 
   /// Cancels the pull request with the given ID. This cancels any fetches for
   /// objects that were passed to the original pull request, if no other pull
@@ -448,6 +456,24 @@ class ObjectManager : public ObjectManagerInterface,
   /// including when the object was last pushed to other object managers.
   std::unordered_map<ObjectID, LocalObjectInfo> local_objects_;
 
+
+  /// Mapping from objects that are being pulled from remote nodes to the time
+  /// that the pull request was send
+  std::unordered_map<ObjectID, double> pull_objects_start;
+
+  /// Mapping from objects that are being pulled from remote nodes to the time
+  /// that the writing to Plasma took
+  std::unordered_map<ObjectID, double> write_objects_total;
+
+  /// Mapping from objects that are being pulled from remote nodes to the time
+  /// that the getting from Plasma took
+  std::unordered_map<ObjectID, double> read_objects_total;
+
+ /// Mapping from objects that are being pulled from remote nodes to the time
+  /// that the push began
+  std::unordered_map<ObjectID, double> push_objects_start;
+
+
   /// This is used as the callback identifier in Pull for
   /// SubscribeObjectLocations. We only need one identifier because we never need to
   /// subscribe multiple times to the same object during Pull.
@@ -497,11 +523,24 @@ class ObjectManager : public ObjectManagerInterface,
   /// Running sum of the amount of memory used in the object store.
   int64_t used_memory_ = 0;
 
+  /// Total number of bytes sent to other nodes
+  int64_t total_bytes_sent_ = 0;
+
+  /// Total number of bytes received by other nodes
+  int64_t total_bytes_received_ = 0;
+
   /// Running total of received chunks.
   int64_t num_chunks_received_total_ = 0;
 
   /// Running total of received chunks that failed (duplicated).
   int64_t num_chunks_received_failed_ = 0;
+
+  /// Local get requests
+  int64_t num_local_get_requests_ = 0;
+
+  /// Remote get requests (should be equal to the num_pull_requests (?))
+  int64_t num_remote_get_requests_ = 0;
+
 };
 
 }  // namespace ray

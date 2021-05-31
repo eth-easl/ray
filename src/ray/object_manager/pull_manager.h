@@ -103,6 +103,9 @@ class PullManager {
   /// The number of ongoing object pulls.
   int NumActiveRequests() const;
 
+  /// The number of total object pulls
+  int NumAllRequests() const;
+
   bool IsObjectActive(const ObjectID &object_id) const;
 
   /// Check whether the pull request is currently active or waiting for object
@@ -235,6 +238,10 @@ class PullManager {
   /// The objects that this object manager has been asked to fetch from remote
   /// object managers.
   std::unordered_map<ObjectID, ObjectPullRequest> object_pull_requests_;
+
+/// The objects that this object manager has been asked to fetch from remote
+  /// object managers, no removals
+  std::unordered_map<ObjectID, ObjectPullRequest> object_pull_requests_all_;
 
   // Protects state that is shared by the threads used to receive object
   // chunks.

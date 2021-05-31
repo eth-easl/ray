@@ -37,6 +37,10 @@ int main(int argc, char *argv[]) {
                                          ray::RayLogLevel::INFO, /*log_dir=*/"");
   ray::RayLog::InstallFailureSignalHandler();
 
+  std::cout << "------- Inside rayStart main" << std::endl;
+    RAY_LOG(WARNING) << "------- Inside rayStart main";
+
+
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   const std::string redis_address = FLAGS_redis_address;
   const int redis_port = static_cast<int>(FLAGS_redis_port);

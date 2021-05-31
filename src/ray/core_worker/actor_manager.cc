@@ -54,6 +54,8 @@ bool ActorManager::AddNewActorHandle(std::unique_ptr<ActorHandle> actor_handle,
                                      const std::string &call_site,
                                      const rpc::Address &caller_address,
                                      bool is_detached) {
+
+
   const auto &actor_id = actor_handle->GetActorID();
   const auto actor_creation_return_id = ObjectID::ForActorHandle(actor_id);
   // Detached actor doesn't need ref counting.

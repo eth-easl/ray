@@ -90,6 +90,8 @@ def validate_config(config: Dict[str, Any]) -> None:
         sum_min_workers = sum(
             config["available_node_types"][node_type].get("min_workers", 0)
             for node_type in config["available_node_types"])
+        print(sum_min_workers, config["max_workers"])
+        print(config)
         if sum_min_workers > config["max_workers"]:
             raise ValueError(
                 "The specified global `max_workers` is smaller than the "

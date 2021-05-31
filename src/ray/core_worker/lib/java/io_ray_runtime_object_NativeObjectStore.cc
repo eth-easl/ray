@@ -55,10 +55,10 @@ ray::Status PutSerializedObject(JNIEnv *env, jobject obj, ray::ObjectID object_i
     }
     if (object_id.IsNil()) {
       RAY_CHECK_OK(
-          ray::CoreWorkerProcess::GetCoreWorker().SealOwned(*out_object_id, pin_object));
+          ray::CoreWorkerProcess::GetCoreWorker().SealOwned(*out_object_id, pin_object, 0));
     } else {
       RAY_CHECK_OK(ray::CoreWorkerProcess::GetCoreWorker().SealExisting(
-          *out_object_id, /* pin_object = */ false));
+          *out_object_id, /* pin_object = */ false, 0));
     }
   }
   return ray::Status::OK();

@@ -50,6 +50,8 @@ namespace ray {
 raylet::RayletConnection::RayletConnection(boost::asio::io_service &io_service,
                                            const std::string &raylet_socket,
                                            int num_retries, int64_t timeout) {
+
+
   local_stream_socket socket(io_service);
   Status s = ConnectSocketRetry(socket, raylet_socket, num_retries, timeout);
   // If we could not connect to the socket, exit.
@@ -61,6 +63,7 @@ raylet::RayletConnection::RayletConnection(boost::asio::io_service &io_service,
 
 Status raylet::RayletConnection::WriteMessage(MessageType type,
                                               flatbuffers::FlatBufferBuilder *fbb) {
+
   std::unique_lock<std::mutex> guard(write_mutex_);
   int64_t length = fbb ? fbb->GetSize() : 0;
   uint8_t *bytes = fbb ? fbb->GetBufferPointer() : nullptr;
@@ -200,6 +203,7 @@ Status raylet::RayletClient::Wait(const std::vector<ObjectID> &object_ids,
                                   bool mark_worker_blocked, const TaskID &current_task_id,
                                   WaitResultPair *result) {
   // Write request.
+
   flatbuffers::FlatBufferBuilder fbb;
   auto message = protocol::CreateWaitRequest(
       fbb, to_flatbuf(fbb, object_ids), AddressesToFlatbuffer(fbb, owner_addresses),
@@ -226,12 +230,16 @@ Status raylet::RayletClient::Wait(const std::vector<ObjectID> &object_ids,
 
 Status raylet::RayletClient::WaitForDirectActorCallArgs(
     const std::vector<rpc::ObjectReference> &references, int64_t tag) {
+
+  //RAY_LOG(INFO) << "RayletClient::WaitForDirectActorCallArgs" ;
+
   flatbuffers::FlatBufferBuilder fbb;
   std::vector<ObjectID> object_ids;
   std::vector<rpc::Address> owner_addresses;
   for (const auto &ref : references) {
     object_ids.push_back(ObjectID::FromBinary(ref.object_id()));
     owner_addresses.push_back(ref.owner_address());
+    ray::rpc::Address it = ref.owner_address();
   }
   auto message = protocol::CreateWaitForDirectActorCallArgsRequest(
       fbb, to_flatbuf(fbb, object_ids), AddressesToFlatbuffer(fbb, owner_addresses), tag);
@@ -401,6 +409,7 @@ void raylet::RayletClient::ReleaseUnusedBundles(
 void raylet::RayletClient::PinObjectIDs(
     const rpc::Address &caller_address, const std::vector<ObjectID> &object_ids,
     const rpc::ClientCallback<rpc::PinObjectIDsReply> &callback) {
+
   rpc::PinObjectIDsRequest request;
   request.mutable_owner_address()->CopyFrom(caller_address);
   for (const ObjectID &object_id : object_ids) {
@@ -427,6 +436,7 @@ void raylet::RayletClient::SubscribeToPlasma(const ObjectID &object_id,
 
 void raylet::RayletClient::GetSystemConfig(
     const rpc::ClientCallback<rpc::GetSystemConfigReply> &callback) {
+
   rpc::GetSystemConfigRequest request;
   grpc_client_->GetSystemConfig(request, callback);
 }

@@ -5,11 +5,13 @@ namespace ray {
 namespace raylet {
 
 bool DependencyManager::CheckObjectLocal(const ObjectID &object_id) const {
+
   return local_objects_.count(object_id) == 1;
 }
 
 bool DependencyManager::GetOwnerAddress(const ObjectID &object_id,
                                         rpc::Address *owner_address) const {
+
   auto obj = required_objects_.find(object_id);
   if (obj == required_objects_.end()) {
     return false;
@@ -37,6 +39,7 @@ void DependencyManager::RemoveObjectIfNotNeeded(
 absl::flat_hash_map<ObjectID, DependencyManager::ObjectDependencies>::iterator
 DependencyManager::GetOrInsertRequiredObject(const ObjectID &object_id,
                                              const rpc::ObjectReference &ref) {
+
   auto it = required_objects_.find(object_id);
   if (it == required_objects_.end()) {
     it = required_objects_.emplace(object_id, ref).first;
@@ -47,22 +50,32 @@ DependencyManager::GetOrInsertRequiredObject(const ObjectID &object_id,
 void DependencyManager::StartOrUpdateWaitRequest(
     const WorkerID &worker_id,
     const std::vector<rpc::ObjectReference> &required_objects) {
-  RAY_LOG(DEBUG) << "Starting wait request for worker " << worker_id;
+
+    //std::cout << "***********  Raylet: DependencyManager::StartOrUpdateWaitRequest " << std::endl;
+
+
   auto &wait_request = wait_requests_[worker_id];
   for (const auto &ref : required_objects) {
     const auto obj_id = ObjectRefToId(ref);
     if (local_objects_.count(obj_id)) {
       // Object is already local. No need to fetch it.
+      RAY_LOG(INFO) << "Object " << obj_id << "is local";
+      object_manager_.AddLocalGet();
       continue;
     }
 
     if (wait_request.insert(obj_id).second) {
+      RAY_LOG(INFO) << "Object " << obj_id << "not local";
       RAY_LOG(DEBUG) << "Worker " << worker_id << " called ray.wait on non-local object "
-                     << obj_id;
+                     << obj_id << " for worker: " << WorkerID::FromBinary(ref.owner_address().worker_id());
       auto it = GetOrInsertRequiredObject(obj_id, ref);
       it->second.dependent_wait_requests.insert(worker_id);
       if (it->second.wait_request_id == 0) {
+
+        object_manager_.AddRemoteGet();
         it->second.wait_request_id = object_manager_.Pull({ref});
+
+
         RAY_LOG(DEBUG) << "Started pull for wait request for object " << obj_id
                        << " request: " << it->second.wait_request_id;
       }
@@ -76,6 +89,10 @@ void DependencyManager::StartOrUpdateWaitRequest(
 }
 
 void DependencyManager::CancelWaitRequest(const WorkerID &worker_id) {
+
+   // std::cout << "***********  Raylet: DependencyManager::CancelWaitRequest " << std::endl;
+
+
   RAY_LOG(DEBUG) << "Canceling wait request for worker " << worker_id;
   auto it = wait_requests_.find(worker_id);
   if (it == wait_requests_.end()) {
@@ -95,13 +112,16 @@ void DependencyManager::CancelWaitRequest(const WorkerID &worker_id) {
 void DependencyManager::StartOrUpdateGetRequest(
     const WorkerID &worker_id,
     const std::vector<rpc::ObjectReference> &required_objects) {
-  RAY_LOG(DEBUG) << "Starting get request for worker " << worker_id;
+
+  //std::cout << "***********  Raylet: DependencyManager::StartOrUpdateGetRequest " << std::endl;
+
+  RAY_LOG(INFO) << "Starting get request for worker " << worker_id;
   auto &get_request = get_requests_[worker_id];
   bool modified = false;
   for (const auto &ref : required_objects) {
     const auto obj_id = ObjectRefToId(ref);
     if (get_request.first.insert(obj_id).second) {
-      RAY_LOG(DEBUG) << "Worker " << worker_id << " called ray.get on object " << obj_id;
+      RAY_LOG(INFO) << "Worker " << worker_id << " called ray.get on object " << obj_id;
       auto it = GetOrInsertRequiredObject(obj_id, ref);
       it->second.dependent_get_requests.insert(worker_id);
       modified = true;
@@ -153,6 +173,10 @@ void DependencyManager::CancelGetRequest(const WorkerID &worker_id) {
 /// Request dependencies for a queued task.
 bool DependencyManager::RequestTaskDependencies(
     const TaskID &task_id, const std::vector<rpc::ObjectReference> &required_objects) {
+
+  //std::cout << "***********  Raylet: DependencyManager::RequestTaskDependencies " << std::endl;
+
+
   RAY_LOG(DEBUG) << "Adding dependencies for task " << task_id
                  << ". Required objects length: " << required_objects.size();
   auto inserted = queued_task_requests_.emplace(task_id, required_objects);
@@ -182,6 +206,10 @@ bool DependencyManager::RequestTaskDependencies(
 }
 
 void DependencyManager::RemoveTaskDependencies(const TaskID &task_id) {
+
+  //std::cout << "***********  Raylet: DependencyManager::RemoveTaskDependencies " << std::endl;
+
+
   RAY_LOG(DEBUG) << "Removing dependencies for task " << task_id;
   auto task_entry = queued_task_requests_.find(task_id);
   RAY_CHECK(task_entry != queued_task_requests_.end())
@@ -205,6 +233,9 @@ void DependencyManager::RemoveTaskDependencies(const TaskID &task_id) {
 
 std::vector<TaskID> DependencyManager::HandleObjectMissing(
     const ray::ObjectID &object_id) {
+  //std::cout << "***********  Raylet: DependencyManager::HandleObjectMissing " << std::endl;
+
+
   RAY_CHECK(local_objects_.erase(object_id))
       << "Evicted object was not local " << object_id;
 
@@ -235,6 +266,9 @@ std::vector<TaskID> DependencyManager::HandleObjectMissing(
 }
 
 std::vector<TaskID> DependencyManager::HandleObjectLocal(const ray::ObjectID &object_id) {
+
+  //std::cout << "***********  Raylet: DependencyManager::HandleObjectLocal object:" << object_id << std::endl;
+
   // Add the object to the table of locally available objects.
   auto inserted = local_objects_.insert(object_id);
   RAY_CHECK(inserted.second) << "Local object was already local " << object_id;

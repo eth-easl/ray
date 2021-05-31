@@ -122,6 +122,8 @@ std::shared_ptr<rpc::CoreWorkerClient> OwnershipBasedObjectDirectory::GetClient(
 ray::Status OwnershipBasedObjectDirectory::ReportObjectAdded(
     const ObjectID &object_id, const NodeID &node_id,
     const object_manager::protocol::ObjectInfoT &object_info) {
+
+
   WorkerID worker_id = WorkerID::FromBinary(object_info.owner_worker_id);
   rpc::Address owner_address = GetOwnerAddressFromObjectInfo(object_info);
   std::shared_ptr<rpc::CoreWorkerClient> rpc_client = GetClient(owner_address);
@@ -242,6 +244,8 @@ void OwnershipBasedObjectDirectory::SubscriptionCallback(
 ray::Status OwnershipBasedObjectDirectory::SubscribeObjectLocations(
     const UniqueID &callback_id, const ObjectID &object_id,
     const rpc::Address &owner_address, const OnLocationsFound &callback) {
+
+
   auto it = listeners_.find(object_id);
   if (it == listeners_.end()) {
     WorkerID worker_id = WorkerID::FromBinary(owner_address.worker_id());
@@ -252,6 +256,8 @@ ray::Status OwnershipBasedObjectDirectory::SubscribeObjectLocations(
       return Status::OK();
     }
     rpc::GetObjectLocationsOwnerRequest request;
+
+
     request.set_intended_worker_id(owner_address.worker_id());
     request.set_object_id(object_id.Binary());
     request.set_last_version(-1);
@@ -275,7 +281,7 @@ ray::Status OwnershipBasedObjectDirectory::SubscribeObjectLocations(
     auto &spilled_url = listener_state.spilled_url;
     auto &spilled_node_id = listener_state.spilled_node_id;
     auto object_size = listener_state.object_size;
-    RAY_LOG(DEBUG) << "Already subscribed to object's locations, pushing location "
+    RAY_LOG(INFO) << "Already subscribed to object's locations, pushing location "
                       "updates to subscribers for object "
                    << object_id << ": " << locations.size()
                    << " locations, spilled_url: " << spilled_url
@@ -294,6 +300,7 @@ ray::Status OwnershipBasedObjectDirectory::SubscribeObjectLocations(
 
 ray::Status OwnershipBasedObjectDirectory::UnsubscribeObjectLocations(
     const UniqueID &callback_id, const ObjectID &object_id) {
+
   auto entry = listeners_.find(object_id);
   if (entry == listeners_.end()) {
     return Status::OK();
@@ -308,8 +315,10 @@ ray::Status OwnershipBasedObjectDirectory::UnsubscribeObjectLocations(
 ray::Status OwnershipBasedObjectDirectory::LookupLocations(
     const ObjectID &object_id, const rpc::Address &owner_address,
     const OnLocationsFound &callback) {
+
   auto it = listeners_.find(object_id);
   if (it != listeners_.end() && it->second.subscribed) {
+
     // If we have locations cached due to a concurrent SubscribeObjectLocations
     // call, and we have received at least one update from the owner about
     // the object's creation, then call the callback immediately with the
@@ -326,7 +335,10 @@ ray::Status OwnershipBasedObjectDirectory::LookupLocations(
           callback(object_id, locations, spilled_url, spilled_node_id, object_size);
         });
   } else {
+
     WorkerID worker_id = WorkerID::FromBinary(owner_address.worker_id());
+
+
     std::shared_ptr<rpc::CoreWorkerClient> rpc_client = GetClient(owner_address);
     if (rpc_client == nullptr) {
       RAY_LOG(WARNING) << "Object " << object_id << " does not have owner. "
@@ -363,6 +375,7 @@ ray::Status OwnershipBasedObjectDirectory::LookupLocations(
                          << " locations, spilled_url: " << spilled_url
                          << ", spilled node ID: " << spilled_node_id
                          << ", object size: " << object_size;
+
           // We can call the callback directly without worrying about invalidating
           // caller iterators since this is already running in the core worker
           // client's lookup callback stack.

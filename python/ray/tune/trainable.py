@@ -228,6 +228,9 @@ class Trainable:
         Returns:
             A dict that describes training progress.
         """
+
+        logger.debug("Inside trainable, train for a step")
+
         start = time.time()
         result = self.step()
         assert isinstance(result, dict), "step() needs to return a dict."
@@ -647,6 +650,7 @@ class Trainable:
             A dict that describes training progress.
 
         """
+        logger.debug("Inside trainable - step")
         result = self._train()
 
         if self._is_overridden("_train") and log_once("_train"):

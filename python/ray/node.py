@@ -194,6 +194,7 @@ class Node:
                     "node_manager_port"]
         else:
             # If the user specified a socket name, use it.
+            print("User-specified socket")
             self._plasma_store_socket_name = self._prepare_socket_file(
                 self._ray_params.plasma_store_socket_name,
                 default_prefix="plasma_store")
@@ -736,6 +737,9 @@ class Node:
         ]
 
     def start_gcs_server(self):
+
+        print("----------------- Start the gcs_server, port: ", self._ray_params.gcs_server_port, ", address: ", self._redis_address)
+
         """Start the gcs server.
         """
         stdout_file, stderr_file = self.get_log_file_handles(

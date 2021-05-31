@@ -74,6 +74,8 @@ static inline void Init(const TagsType &global_tags, const int metrics_agent_por
     return;
   }
   RAY_LOG(DEBUG) << "Initialized stats";
+  //std::cout << "Initialize stats!" << std::endl;
+
 
   metrics_io_service_pool = std::make_shared<IOServicePool>(1);
   metrics_io_service_pool->Run();

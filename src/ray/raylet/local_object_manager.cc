@@ -24,15 +24,17 @@ namespace raylet {
 void LocalObjectManager::PinObjects(const std::vector<ObjectID> &object_ids,
                                     std::vector<std::unique_ptr<RayObject>> &&objects,
                                     const rpc::Address &owner_address) {
+
   for (size_t i = 0; i < object_ids.size(); i++) {
     const auto &object_id = object_ids[i];
     auto &object = objects[i];
+
     if (object == nullptr) {
       RAY_LOG(ERROR) << "Plasma object " << object_id
                      << " was evicted before the raylet could pin it.";
       continue;
     }
-    RAY_LOG(DEBUG) << "Pinning object " << object_id;
+    //RAY_LOG(INFO) << "--------------------------> Pinning object " << object_id;
     pinned_objects_size_ += object->GetSize();
     pinned_objects_.emplace(object_id, std::make_pair(std::move(object), owner_address));
   }
@@ -40,11 +42,15 @@ void LocalObjectManager::PinObjects(const std::vector<ObjectID> &object_ids,
 
 void LocalObjectManager::WaitForObjectFree(const rpc::Address &owner_address,
                                            const std::vector<ObjectID> &object_ids) {
+
+  // std::cout << "***********  Raylet: LocalObjectManager::WaitForObjectFree, " << std::endl;
+
   for (const auto &object_id : object_ids) {
     // Send a long-running RPC request to the owner for each object. When we get a
     // response or the RPC fails (due to the owner crashing), unpin the object.
     // TODO(edoakes): we should be batching these requests instead of sending one per
     // pinned object.
+    RAY_LOG(INFO) << "WaitForObjectFree for object: " << object_id;
     rpc::WaitForObjectEvictionRequest wait_request;
     wait_request.set_object_id(object_id.Binary());
     wait_request.set_intended_worker_id(owner_address.worker_id());
@@ -61,6 +67,9 @@ void LocalObjectManager::WaitForObjectFree(const rpc::Address &owner_address,
 }
 
 void LocalObjectManager::ReleaseFreedObject(const ObjectID &object_id) {
+
+    // std::cout << "***********  Raylet: LocalObjectManager::ReleaseFreedObject, " << std::endl;
+
   RAY_LOG(DEBUG) << "Unpinning object " << object_id;
   // The object should be in one of these stats. pinned, spilling, or spilled.
   RAY_CHECK((pinned_objects_.count(object_id) > 0) ||
@@ -74,6 +83,8 @@ void LocalObjectManager::ReleaseFreedObject(const ObjectID &object_id) {
     pinned_objects_.erase(object_id);
   }
 
+  //RAY_LOG(INFO) << "pinned object size: " << pinned_objects_.size();
+
   // Try to evict all copies of the object from the cluster.
   if (free_objects_period_ms_ >= 0) {
     objects_to_free_.push_back(object_id);
@@ -85,6 +96,9 @@ void LocalObjectManager::ReleaseFreedObject(const ObjectID &object_id) {
 }
 
 void LocalObjectManager::FlushFreeObjects() {
+
+    //std::cout << "***********  Raylet: LocalObjectManager::FlushFreeObjects, " << std::endl;
+
   if (!objects_to_free_.empty()) {
     RAY_LOG(DEBUG) << "Freeing " << objects_to_free_.size() << " out-of-scope objects";
     on_objects_freed_(objects_to_free_);
@@ -102,6 +116,8 @@ void LocalObjectManager::SpillObjectUptoMaxThroughput() {
       !RayConfig::instance().automatic_object_spilling_enabled()) {
     return;
   }
+
+  RAY_LOG(INFO) << "Inside LocalObjectManager::SpillObjectUptoMaxThroughput" ;
 
   // Spill as fast as we can using all our spill workers.
   bool can_spill_more = true;
@@ -128,17 +144,21 @@ bool LocalObjectManager::SpillObjectsOfSize(int64_t num_bytes_to_spill) {
     return false;
   }
 
-  RAY_LOG(DEBUG) << "Choosing objects to spill of total size " << num_bytes_to_spill;
+  RAY_LOG(INFO) << "Choosing objects to spill of total size " << num_bytes_to_spill;
   int64_t bytes_to_spill = 0;
   auto it = pinned_objects_.begin();
+  RAY_LOG(INFO) << "pinned objects size: " << pinned_objects_.size();
   std::vector<ObjectID> objects_to_spill;
   while (bytes_to_spill <= num_bytes_to_spill && it != pinned_objects_.end()) {
     if (is_plasma_object_spillable_(it->first)) {
+      RAY_LOG(INFO) << "Check object: " << it->first;
       bytes_to_spill += it->second.first->GetSize();
       objects_to_spill.push_back(it->first);
     }
     it++;
   }
+  RAY_LOG(INFO) << "objects_to_spill size: " << objects_to_spill.size();
+
   if (!objects_to_spill.empty()) {
     RAY_LOG(DEBUG) << "Spilling objects of total size " << bytes_to_spill
                    << " num objects " << objects_to_spill.size();
@@ -199,7 +219,7 @@ void LocalObjectManager::SpillObjectsInternal(
     // already spilling.
     auto it = pinned_objects_.find(id);
     if (it != pinned_objects_.end()) {
-      RAY_LOG(DEBUG) << "Spilling object " << id;
+      RAY_LOG(INFO) << "Spilling object " << id;
       objects_to_spill.push_back(id);
       num_bytes_pending_spill_ += it->second.first->GetSize();
       objects_pending_spill_[id] = std::move(it->second);
@@ -217,7 +237,7 @@ void LocalObjectManager::SpillObjectsInternal(
       [this, objects_to_spill, callback](std::shared_ptr<WorkerInterface> io_worker) {
         rpc::SpillObjectsRequest request;
         for (const auto &object_id : objects_to_spill) {
-          RAY_LOG(DEBUG) << "Sending spill request for object " << object_id;
+          RAY_LOG(INFO) << "Sending spill request for object " << object_id;
           request.add_object_ids_to_spill(object_id.Binary());
           auto it = objects_pending_spill_.find(object_id);
           RAY_CHECK(it != objects_pending_spill_.end());
@@ -344,8 +364,14 @@ void LocalObjectManager::AddSpilledUrls(
 }
 
 void LocalObjectManager::AsyncRestoreSpilledObject(
+
+
     const ObjectID &object_id, const std::string &object_url, const NodeID &node_id,
     std::function<void(const ray::Status &)> callback) {
+
+
+  RAY_LOG(INFO) << "Inside LocalObjectManager::AsyncRestoreSpilledObject";
+
   if (objects_pending_restore_.count(object_id) > 0) {
     // If the same object is restoring, we dedup here.
     return;
@@ -368,7 +394,7 @@ void LocalObjectManager::AsyncRestoreSpilledObject(
   }
 
   // Restore the object.
-  RAY_LOG(DEBUG) << "Restoring spilled object " << object_id << " from URL "
+  RAY_LOG(INFO) << "Restoring spilled object " << object_id << " from URL "
                  << object_url;
   if (is_external_storage_type_fs_ && spilled_objects_url_.count(object_id) == 0) {
     RAY_CHECK(!node_id.IsNil());
@@ -404,7 +430,7 @@ void LocalObjectManager::AsyncRestoreSpilledObject(
           } else {
             auto now = absl::GetCurrentTimeNanos();
             auto restored_bytes = r.bytes_restored_total();
-            RAY_LOG(DEBUG) << "Restored " << restored_bytes << " in "
+            RAY_LOG(INFO) << "Restored " << restored_bytes << " in "
                            << (now - start_time) / 1e6 << "ms. Object id:" << object_id;
             restored_bytes_total_ += restored_bytes;
             restored_objects_total_ += 1;

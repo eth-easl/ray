@@ -154,6 +154,7 @@ class TFTrainer:
     def _get_model_from_state(self, state):
         """Creates model and load weights from state"""
 
+        logger.debug("Call set weights")
         model = self.model_creator(self.config)
         model.set_weights(state["weights"])
         return model

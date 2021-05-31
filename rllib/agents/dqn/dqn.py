@@ -211,6 +211,8 @@ def execution_plan(workers: WorkerSet,
         replay_zero_init_states=config.get("zero_init_states", True),
         **prio_args)
 
+
+    logger.debug("callin ParallelRollouts")
     rollouts = ParallelRollouts(workers, mode="bulk_sync")
 
     # We execute the following steps concurrently:

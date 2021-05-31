@@ -39,7 +39,7 @@ def cli(address):
     f"Defaults to {DEFAULT_HTTP_PORT}.")
 @click.option(
     "--http-location",
-    default=DeploymentMode.HeadOnly,
+    default=DeploymentMode.EveryNode,
     required=False,
     type=click.Choice(list(DeploymentMode)),
     help="Location of the HTTP servers. Defaults to HeadOnly.")

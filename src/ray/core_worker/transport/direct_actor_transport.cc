@@ -369,6 +369,11 @@ void CoreWorkerDirectTaskReceiver::HandleTask(
   RAY_CHECK(waiter_ != nullptr) << "Must call init() prior to use";
   const TaskSpecification task_spec(request.task_spec());
 
+  RAY_LOG(INFO) << "Inside CoreWorkerDirectTaskReceiver::HandleTask for task: Args: " << task_spec.NumArgs();
+  // for (int i=0; i<(int)task_spec.NumArgs(); i++){
+  //   RAY_LOG(INFO) << "owner of arg i " << i << " is " << WorkerID::FromBinary(task_spec.ArgRef(i).owner_address().worker_id());
+  // }
+
   // If GCS server is restarted after sending an actor creation task to this core worker,
   // the restarted GCS server will send the same actor creation task to the core worker
   // again. We just need to ignore it and reply ok.

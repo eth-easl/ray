@@ -175,7 +175,7 @@ TEST_F(MetricExporterClientTest, exporter_client_caculation_test) {
   }
   opencensus::stats::DeltaProducer::Get()->Flush();
   opencensus::stats::StatsExporterImpl::Get()->Export();
-  RAY_LOG(INFO) << "Min " << mock1->GetLastestHistMin() << ", mean "
+  //RAY_LOG(INFO) << "Min " << mock1->GetLastestHistMin() << ", mean "
                 << mock1->GetLastestHistMean() << ", max " << mock1->GetLastestHistMax();
   ASSERT_TRUE(DoubleEqualTo(mock1->GetLastestHistMin(), 0.0));
   ASSERT_TRUE(DoubleEqualTo(mock1->GetLastestHistMean(), 249.5));

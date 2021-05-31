@@ -19,7 +19,7 @@
 namespace ray {
 
 Status CoreWorkerDirectTaskSubmitter::SubmitTask(TaskSpecification task_spec) {
-  RAY_LOG(DEBUG) << "Submit task " << task_spec.TaskId();
+  //RAY_LOG(INFO) << "Submit task " << task_spec.TaskId();
 
   if (task_spec.IsActorCreationTask()) {
     // Synchronously register the actor to GCS server.

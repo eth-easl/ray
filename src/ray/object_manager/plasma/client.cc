@@ -327,8 +327,11 @@ Status PlasmaClient::Impl::Create(const ObjectID &object_id,
                                   std::shared_ptr<Buffer> *data, int device_num) {
   std::lock_guard<std::recursive_mutex> guard(client_mutex_);
 
-  RAY_LOG(DEBUG) << "called plasma_create on conn " << store_conn_ << " with size "
+  RAY_LOG(INFO) << "called plasma_create on conn " << store_conn_ << " with size "
                  << data_size << " and metadata size " << metadata_size;
+
+  //std::cout << "called plasma_create on conn " << store_conn_ << " with size "
+  //               << data_size << " and metadata size " << metadata_size << std::endl;
   RAY_RETURN_NOT_OK(SendCreateRequest(store_conn_, object_id, owner_address, data_size,
                                       metadata_size, device_num,
                                       /*try_immediately=*/false));
@@ -350,7 +353,7 @@ Status PlasmaClient::Impl::TryCreateImmediately(
     int device_num) {
   std::lock_guard<std::recursive_mutex> guard(client_mutex_);
 
-  RAY_LOG(DEBUG) << "called plasma_create on conn " << store_conn_ << " with size "
+  RAY_LOG(INFO) << "called plasma_create on conn " << store_conn_ << " with size "
                  << data_size << " and metadata size " << metadata_size;
   RAY_RETURN_NOT_OK(SendCreateRequest(store_conn_, object_id, owner_address, data_size,
                                       metadata_size, device_num,
@@ -366,6 +369,7 @@ Status PlasmaClient::Impl::GetBuffers(
   // Fill out the info for the objects that are already in use locally.
   bool all_present = true;
   for (int64_t i = 0; i < num_objects; ++i) {
+
     auto object_entry = objects_in_use_.find(object_ids[i]);
     if (object_entry == objects_in_use_.end()) {
       // This object is not currently in use by this client, so we need to send
@@ -381,6 +385,7 @@ Status PlasmaClient::Impl::GetBuffers(
           << "Attempting to get an object that this client created but hasn't sealed.";
       all_present = false;
     } else {
+
       PlasmaObject *object = &object_entry->second->object;
       std::shared_ptr<Buffer> physical_buf;
 
@@ -407,10 +412,16 @@ Status PlasmaClient::Impl::GetBuffers(
     return Status::OK();
   }
 
+
+
   // If we get here, then the objects aren't all currently in use by this
   // client, so we need to send a request to the plasma store.
+  //auto start = std::chrono::steady_clock::now();
   RAY_RETURN_NOT_OK(SendGetRequest(store_conn_, &object_ids[0], num_objects, timeout_ms,
                                    is_from_worker));
+  //auto end11 = std::chrono::steady_clock::now();
+  //std::cout << "Sending to Plasma took: " << std::chrono::duration_cast<std::chrono::microseconds>(end11 - start).count() << " us" << std::endl;
+
   std::vector<uint8_t> buffer;
   RAY_RETURN_NOT_OK(PlasmaReceive(store_conn_, MessageType::PlasmaGetReply, &buffer));
   std::vector<ObjectID> received_object_ids(num_objects);
@@ -418,8 +429,16 @@ Status PlasmaClient::Impl::GetBuffers(
   PlasmaObject *object;
   std::vector<MEMFD_TYPE> store_fds;
   std::vector<int64_t> mmap_sizes;
+
+  //auto end1 = std::chrono::steady_clock::now();
+
+  //std::cout << "Receiving from Plasma took: " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - end11).count() << " us" << std::endl;
   RAY_RETURN_NOT_OK(ReadGetReply(buffer.data(), buffer.size(), received_object_ids.data(),
                                  object_data.data(), num_objects, store_fds, mmap_sizes));
+  //auto end2 = std::chrono::steady_clock::now();
+  //std::cout << "Reading Reply took: " << std::chrono::duration_cast<std::chrono::microseconds>(end2 - end1).count() << " us" << std::endl;
+
+
 
   // We mmap all of the file descriptors here so that we can avoid look them up
   // in the subsequent loop based on just the store file descriptor and without
@@ -427,6 +446,10 @@ Status PlasmaClient::Impl::GetBuffers(
   for (size_t i = 0; i < store_fds.size(); i++) {
     GetStoreFdAndMmap(store_fds[i], mmap_sizes[i]);
   }
+
+  //auto end3 = std::chrono::steady_clock::now();
+  //std::cout << "Mapping took: " << std::chrono::duration_cast<std::chrono::microseconds>(end3 - end2).count() << " us" << std::endl;
+
 
   for (int64_t i = 0; i < num_objects; ++i) {
     RAY_DCHECK(received_object_ids[i] == object_ids[i]);
@@ -467,6 +490,9 @@ Status PlasmaClient::Impl::GetBuffers(
       RAY_DCHECK(!object_buffers[i].data);
     }
   }
+
+  //auto end = std::chrono::steady_clock::now();
+  //std::cout << "Process Reply from Plasma took: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
   return Status::OK();
 }
 

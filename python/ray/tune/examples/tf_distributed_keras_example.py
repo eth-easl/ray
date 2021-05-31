@@ -94,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cluster",
         action="store_true",
-        default=False,
+        default=True,
         help="enables multi-node tuning")
     parser.add_argument(
         "--smoke-test",
@@ -127,7 +127,7 @@ if __name__ == "__main__":
             "mean_accuracy": 0.99,
             "training_iteration": 10
         },
-        num_samples=1,
+        num_samples=4,
         config={
             "use_mini": args.smoke_test,
             "lr": tune.uniform(0.001, 0.1),

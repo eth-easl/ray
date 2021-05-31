@@ -222,7 +222,9 @@ class HTTPOptions(pydantic.BaseModel):
     host: Optional[str] = DEFAULT_HTTP_HOST
     port: int = DEFAULT_HTTP_PORT
     middlewares: List[Any] = []
-    location: Optional[DeploymentMode] = DeploymentMode.HeadOnly
+    location: Optional[DeploymentMode] = DeploymentMode.EveryNode
+
+    #location: Optional[DeploymentMode] = None
 
     @validator("location", always=True)
     def location_backfill_no_server(cls, v, values):

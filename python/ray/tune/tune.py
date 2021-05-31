@@ -384,6 +384,7 @@ def run(
     else:
         experiments = [run_or_experiment]
 
+    logger.debug("Inside ray.tune")
     for i, exp in enumerate(experiments):
         if not isinstance(exp, Experiment):
             experiments[i] = Experiment(
@@ -516,6 +517,8 @@ def run(
         signal.signal(signal.SIGINT, sigint_handler)
 
     tune_start = time.time()
+
+    logger.debug("Start with trials!")
     while not runner.is_finished() and not state[signal.SIGINT]:
         runner.step()
         if has_verbosity(Verbosity.V1_EXPERIMENT):

@@ -67,6 +67,7 @@ def test_node_physical_stats(enable_test_module, shutdown_only):
     actor_pids = set(actor_pids)
 
     webui_url = addresses["webui_url"]
+    print("webui_url: ", webui_url)
     assert (wait_until_server_available(webui_url) is True)
     webui_url = format_web_url(webui_url)
 

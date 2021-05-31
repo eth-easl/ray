@@ -182,9 +182,9 @@ class Count(Counter):
                  name: str,
                  description: str = "",
                  tag_keys: Optional[Tuple[str]] = None):
-        logger.warning(
-            "`metrics.Count` has been renamed to `metrics.Counter`. "
-            "`metrics.Count` will be removed in a future release.")
+        # logger.warning(
+        #     "`metrics.Count` has been renamed to `metrics.Counter`. "
+        #     "`metrics.Count` will be removed in a future release.")
         super().__init__(name, description, tag_keys)
 
 

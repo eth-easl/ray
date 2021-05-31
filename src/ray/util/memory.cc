@@ -18,6 +18,7 @@
 #include <thread>
 #include <vector>
 
+#include <iostream>
 namespace ray {
 
 uint8_t *pointer_logical_and(const uint8_t *address, uintptr_t bits) {
@@ -27,6 +28,8 @@ uint8_t *pointer_logical_and(const uint8_t *address, uintptr_t bits) {
 
 void parallel_memcopy(uint8_t *dst, const uint8_t *src, int64_t nbytes,
                       uintptr_t block_size, int num_threads) {
+
+
   std::vector<std::thread> threadpool(num_threads);
   uint8_t *left = pointer_logical_and(src + block_size - 1, ~(block_size - 1));
   uint8_t *right = pointer_logical_and(src + nbytes, ~(block_size - 1));

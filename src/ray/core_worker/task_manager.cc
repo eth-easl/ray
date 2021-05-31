@@ -27,7 +27,7 @@ const int64_t kTaskFailureLoggingFrequencyMillis = 5000;
 void TaskManager::AddPendingTask(const rpc::Address &caller_address,
                                  const TaskSpecification &spec,
                                  const std::string &call_site, int max_retries) {
-  RAY_LOG(DEBUG) << "Adding pending task " << spec.TaskId() << " with " << max_retries
+  RAY_LOG(INFO) << "Adding pending task " << spec.TaskId() << " with " << max_retries
                  << " retries";
 
   // Add references for the dependencies to the task.
@@ -174,6 +174,8 @@ void TaskManager::CompletePendingTask(const TaskID &task_id,
                                       const rpc::PushTaskReply &reply,
                                       const rpc::Address &worker_addr) {
   RAY_LOG(DEBUG) << "Completing task " << task_id;
+
+  //std::cout << "IN CompletePendingTask, task_id: " << task_id << std::endl;
 
   std::vector<ObjectID> direct_return_ids;
   std::vector<ObjectID> plasma_return_ids;

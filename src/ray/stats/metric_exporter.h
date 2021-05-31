@@ -63,6 +63,7 @@ class MetricPointExporter final : public opencensus::stats::StatsExporter::Handl
                       const opencensus::stats::MeasureDescriptor &measure_descriptor,
                       std::vector<std::string> &keys, std::vector<MetricPoint> &points) {
     const auto &metric_name = measure_descriptor.name();
+    //std::cout << "-----" << metric_name << std::endl;
     for (const auto &row : view_data) {
       std::unordered_map<std::string, std::string> tags;
       for (size_t i = 0; i < keys.size(); ++i) {

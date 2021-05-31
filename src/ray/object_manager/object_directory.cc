@@ -151,6 +151,9 @@ ray::Status ObjectDirectory::SubscribeObjectLocations(const UniqueID &callback_i
                                                       const ObjectID &object_id,
                                                       const rpc::Address &owner_address,
                                                       const OnLocationsFound &callback) {
+
+  RAY_LOG(INFO) << "ObjectDirectory::SubscribeObjectLocations for object: " << object_id;
+
   ray::Status status = ray::Status::OK();
   auto it = listeners_.find(object_id);
   if (it == listeners_.end()) {
@@ -233,9 +236,12 @@ ray::Status ObjectDirectory::UnsubscribeObjectLocations(const UniqueID &callback
 ray::Status ObjectDirectory::LookupLocations(const ObjectID &object_id,
                                              const rpc::Address &owner_address,
                                              const OnLocationsFound &callback) {
+
+  RAY_LOG(INFO) << "ObjectDirectory::LookupLocations for  " << object_id;
   ray::Status status;
   auto it = listeners_.find(object_id);
   if (it != listeners_.end() && it->second.subscribed) {
+
     // If we have locations cached due to a concurrent SubscribeObjectLocations
     // call, and we have received at least one notification from the GCS about
     // the object's creation, then call the callback immediately with the
@@ -243,12 +249,16 @@ ray::Status ObjectDirectory::LookupLocations(const ObjectID &object_id,
     auto &locations = it->second.current_object_locations;
     auto &spilled_url = it->second.spilled_url;
     auto &spilled_node_id = it->second.spilled_node_id;
+
     auto object_size = it->second.object_size;
     io_service_.post(
         [callback, object_id, spilled_url, locations, object_size, spilled_node_id]() {
           callback(object_id, locations, spilled_url, spilled_node_id, object_size);
         });
   } else {
+
+
+
     // We do not have any locations cached due to a concurrent
     // SubscribeObjectLocations call, so look up the object's locations
     // directly from the GCS.

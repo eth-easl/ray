@@ -5,6 +5,7 @@ from ray.test_utils import Semaphore
 
 from time import perf_counter
 from tqdm import trange, tqdm
+from time import sleep
 
 MAX_ARGS = 10000
 MAX_RETURNS = 3000
@@ -16,12 +17,17 @@ MAX_RAY_GET_SIZE = 100 * 2**30
 def test_many_args():
     @ray.remote
     def sum_args(*args):
+        #print('Hello!')
+        sleep(10)
         return sum(sum(arg) for arg in args)
+        #return
 
-    args = [[1 for _ in range(10000)] for _ in range(MAX_ARGS)]
-    result = ray.get(sum_args.remote(*args))
-    assert result == MAX_ARGS * 10000
-
+    args = [[1 for _ in range(100)] for _ in range(1)]
+    obj = [sum_args.remote(*args) for _ in range(1)]
+    print(obj)
+    result = ray.get(obj)
+    #assert result == 1 * 10000
+    print(result)
 
 def test_many_returns():
     @ray.remote(num_returns=MAX_RETURNS)
@@ -72,7 +78,7 @@ def test_ray_get_args():
 
         print("Asserting correctness")
         for obj in tqdm(results):
-            expected = np.arange(10000)
+            expected = np.arange(1000000)
             assert (obj == expected).all()
 
     with_dese()
@@ -113,9 +119,11 @@ def test_many_queued_tasks():
 
 def test_large_object():
     print("Generating object")
-    obj = np.zeros(MAX_RAY_GET_SIZE, dtype=np.int8)
+    obj = np.zeros(10000, dtype=np.int8)
     print("Putting object")
     ref = ray.put(obj)
+    print(ref)
+    sleep(10)
     del obj
     print("Getting object")
     big_obj = ray.get(ref)
@@ -124,15 +132,17 @@ def test_large_object():
     assert big_obj[-1] == 0
 
 
-ray.init(address="auto")
+res = ray.init(_metrics_export_port=8085)
+print("Init res dict: ", res)
 
-args_start = perf_counter()
-test_many_args()
-args_end = perf_counter()
+# args_start = perf_counter()
+# test_many_args()
+# args_end = perf_counter()
 
-assert ray.cluster_resources() == ray.available_resources()
-print("Finished many args")
+# assert ray.cluster_resources() == ray.available_resources()
+# print("Finished many args")
 
+'''
 returns_start = perf_counter()
 test_many_returns()
 returns_end = perf_counter()
@@ -153,14 +163,17 @@ queued_end = perf_counter()
 
 assert ray.cluster_resources() == ray.available_resources()
 print("Finished queueing many tasks")
+'''
 
+print("Before calling test_large_object")
 large_object_start = perf_counter()
 test_large_object()
 large_object_end = perf_counter()
 
 assert ray.cluster_resources() == ray.available_resources()
-print("Done")
+print("After calling test_large_object")
 
+'''
 args_time = args_end - args_start
 returns_time = returns_end - returns_start
 get_time = get_end - get_start
@@ -173,3 +186,4 @@ print(f"Ray.get time: {get_time} ({MAX_RAY_GET_ARGS} args)")
 print(f"Queued task time: {queued_time} ({MAX_QUEUED_TASKS} tasks)")
 print(f"Ray.get large object time: {large_object_time} "
       f"({MAX_RAY_GET_SIZE} bytes)")
+'''

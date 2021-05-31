@@ -179,8 +179,8 @@ cdef extern from "ray/core_worker/core_worker.h" nogil:
                                   const CObjectID &object_id,
                                   const CAddress &owner_address,
                                   shared_ptr[CBuffer] *data)
-        CRayStatus SealOwned(const CObjectID &object_id, c_bool pin_object)
-        CRayStatus SealExisting(const CObjectID &object_id, c_bool pin_object)
+        CRayStatus SealOwned(const CObjectID &object_id, c_bool pin_object, size_t obj_size)
+        CRayStatus SealExisting(const CObjectID &object_id, c_bool pin_object, size_t obj_size)
         CRayStatus Get(const c_vector[CObjectID] &ids, int64_t timeout_ms,
                        c_vector[shared_ptr[CRayObject]] *results,
                        c_bool plasma_objects_only)

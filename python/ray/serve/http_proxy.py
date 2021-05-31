@@ -16,6 +16,8 @@ from ray.serve.http_util import Response, build_starlette_request
 from ray.serve.long_poll import LongPollAsyncClient
 from ray.serve.handle import DEFAULT
 
+import sys
+
 logger = _get_logger()
 
 
@@ -44,6 +46,7 @@ class ServeStarletteEndpoint:
 
     async def __call__(self, scope, receive, send):
         http_body_bytes = await self.receive_http_body(scope, receive, send)
+        #print("http_body_bytes ", sys.getsizeof(http_body_bytes))
 
         headers = {k.decode(): v.decode() for k, v in scope["headers"]}
         if self.handle is None:
@@ -77,7 +80,10 @@ class ServeStarletteEndpoint:
 
             more_body = message["more_body"]
             body_buffer.append(message["body"])
+            #print("message: ", message["more_body"])
 
+        #print(body_buffer)
+        #print("receive_http_body buffer len: ", len(body_buffer))
         return b"".join(body_buffer)
 
 

@@ -88,7 +88,13 @@ Status PlasmaReceive(const std::shared_ptr<StoreConn> &store_conn,
   if (!store_conn) {
     return Status::IOError("Connection is closed.");
   }
-  return store_conn->ReadMessage(static_cast<int64_t>(message_type), buffer);
+
+  //auto start = std::chrono::steady_clock::now();
+  auto res = store_conn->ReadMessage(static_cast<int64_t>(message_type), buffer);
+  //auto end1 = std::chrono::steady_clock::now();
+
+  //std::cout << "ReadMessage took: " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - start).count() << " us" << std::endl;
+  return res;
 }
 
 // Helper function to create a vector of elements from Data (Request/Reply struct).

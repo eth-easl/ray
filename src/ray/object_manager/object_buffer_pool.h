@@ -26,6 +26,9 @@
 #include "ray/common/status.h"
 #include "ray/object_manager/plasma/client.h"
 
+
+#include "absl/time/clock.h"
+
 namespace ray {
 
 /// \class ObjectBufferPool Exposes chunks of object buffers for use by the ObjectManager.
@@ -82,7 +85,7 @@ class ObjectBufferPool {
   /// An IOError status is returned if the Get call on the plasma store fails.
   std::pair<const ObjectBufferPool::ChunkInfo &, ray::Status> GetChunk(
       const ObjectID &object_id, uint64_t data_size, uint64_t metadata_size,
-      uint64_t chunk_index);
+      uint64_t chunk_index, std::unordered_map<ObjectID, double> &read_objects_total);
 
   /// When a chunk is done being used as part of a get, this method releases the chunk.
   /// If all chunks of an object are released, the object buffer will be released.
@@ -129,7 +132,7 @@ class ObjectBufferPool {
   ///
   /// \param object_id The ObjectID.
   /// \param chunk_index The index of the chunk.
-  void SealChunk(const ObjectID &object_id, uint64_t chunk_index);
+  void SealChunk(const ObjectID &object_id, uint64_t chunk_index, std::unordered_map<ObjectID, double>& pull_objects_start, std::unordered_map<ObjectID, double>& write_objects_total);
 
   /// Free a list of objects from object store.
   ///

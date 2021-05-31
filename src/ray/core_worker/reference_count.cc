@@ -78,6 +78,7 @@ bool ReferenceCounter::AddBorrowedObject(const ObjectID &object_id,
                                          const ObjectID &outer_id,
                                          const rpc::Address &owner_address) {
   absl::MutexLock lock(&mutex_);
+
   return AddBorrowedObjectInternal(object_id, outer_id, owner_address);
 }
 
@@ -87,7 +88,6 @@ bool ReferenceCounter::AddBorrowedObjectInternal(const ObjectID &object_id,
   auto it = object_id_refs_.find(object_id);
   RAY_CHECK(it != object_id_refs_.end());
 
-  RAY_LOG(DEBUG) << "Adding borrowed object " << object_id;
   // Skip adding this object as a borrower if we already have ownership info.
   // If we already have ownership info, then either we are the owner or someone
   // else already knows that we are a borrower.
@@ -155,7 +155,6 @@ void ReferenceCounter::AddOwnedObject(const ObjectID &object_id,
                                       const std::string &call_site,
                                       const int64_t object_size, bool is_reconstructable,
                                       const absl::optional<NodeID> &pinned_at_raylet_id) {
-  RAY_LOG(DEBUG) << "Adding owned object " << object_id;
   absl::MutexLock lock(&mutex_);
   RAY_CHECK(object_id_refs_.count(object_id) == 0)
       << "Tried to create an owned object that already exists: " << object_id;
@@ -209,7 +208,6 @@ void ReferenceCounter::AddLocalReference(const ObjectID &object_id,
     it = object_id_refs_.emplace(object_id, Reference(call_site, -1)).first;
   }
   it->second.local_ref_count++;
-  RAY_LOG(DEBUG) << "Add local reference " << object_id;
   PRINT_REF_COUNT(it);
 }
 
@@ -241,7 +239,6 @@ void ReferenceCounter::UpdateSubmittedTaskReferences(
     const std::vector<ObjectID> &argument_ids_to_remove, std::vector<ObjectID> *deleted) {
   absl::MutexLock lock(&mutex_);
   for (const ObjectID &argument_id : argument_ids_to_add) {
-    RAY_LOG(DEBUG) << "Increment ref count for submitted task argument " << argument_id;
     auto it = object_id_refs_.find(argument_id);
     if (it == object_id_refs_.end()) {
       // This happens if a large argument is transparently passed by reference
@@ -357,6 +354,7 @@ bool ReferenceCounter::GetOwner(const ObjectID &object_id,
 
 bool ReferenceCounter::GetOwnerInternal(const ObjectID &object_id,
                                         rpc::Address *owner_address) const {
+
   auto it = object_id_refs_.find(object_id);
   if (it == object_id_refs_.end()) {
     return false;
@@ -364,6 +362,7 @@ bool ReferenceCounter::GetOwnerInternal(const ObjectID &object_id,
 
   if (it->second.owner_address) {
     *owner_address = *it->second.owner_address;
+
     return true;
   } else {
     return false;
@@ -375,6 +374,7 @@ std::vector<rpc::Address> ReferenceCounter::GetOwnerAddresses(
   absl::MutexLock lock(&mutex_);
   std::vector<rpc::Address> owner_addresses;
   for (const auto &object_id : object_ids) {
+
     rpc::Address owner_addr;
     bool has_owner = GetOwnerInternal(object_id, &owner_addr);
     if (!has_owner) {
@@ -387,8 +387,10 @@ std::vector<rpc::Address> ReferenceCounter::GetOwnerAddresses(
              "at https://github.com/ray-project/ray/issues/";
       // TODO(swang): Java does not seem to keep the ref count properly, so the
       // entry may get deleted.
+      RAY_LOG(INFO) << "owner address not found ";
       owner_addresses.push_back(rpc::Address());
     } else {
+      //RAY_LOG(INFO) << "owner address is found ";
       owner_addresses.push_back(owner_addr);
     }
   }
@@ -685,13 +687,13 @@ bool ReferenceCounter::GetAndClearLocalBorrowersInternal(const ObjectID &object_
 void ReferenceCounter::MergeRemoteBorrowers(const ObjectID &object_id,
                                             const rpc::WorkerAddress &worker_addr,
                                             const ReferenceTable &borrowed_refs) {
-  RAY_LOG(DEBUG) << "Merging ref " << object_id;
+  RAY_LOG(INFO) << "Merging ref " << object_id;
   auto borrower_it = borrowed_refs.find(object_id);
   if (borrower_it == borrowed_refs.end()) {
     return;
   }
   const auto &borrower_ref = borrower_it->second;
-  RAY_LOG(DEBUG) << "Borrower ref " << object_id << " has "
+  RAY_LOG(INFO) << "Borrower ref " << object_id << " has "
                  << borrower_ref.borrowers.size() << " borrowers "
                  << ", has local: " << borrower_ref.local_ref_count
                  << " submitted: " << borrower_ref.submitted_task_ref_count
@@ -879,7 +881,7 @@ void ReferenceCounter::SetRefRemovedCallback(
     const rpc::Address &owner_address,
     const ReferenceCounter::ReferenceRemovedCallback &ref_removed_callback) {
   absl::MutexLock lock(&mutex_);
-  RAY_LOG(DEBUG) << "Received WaitForRefRemoved " << object_id << " contained in "
+  RAY_LOG(INFO) << "Received WaitForRefRemoved " << object_id << " contained in "
                  << contained_in_id;
 
   auto it = object_id_refs_.find(object_id);

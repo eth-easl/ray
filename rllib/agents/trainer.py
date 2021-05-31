@@ -487,6 +487,9 @@ class Trainer(Trainable):
         # User provided config (this is w/o the default Trainer's
         # `COMMON_CONFIG` (see above)). Will get merged with COMMON_CONFIG
         # in self.setup().
+
+        logger.debug("Initialize a new trainer")
+
         config = config or {}
 
         # Trainers allow env ids to be passed directly to the constructor.
@@ -556,6 +559,7 @@ class Trainer(Trainable):
         result = None
         for _ in range(1 + MAX_WORKER_FAILURE_RETRIES):
             try:
+                logger.debug("train!")
                 result = Trainable.train(self)
             except RayError as e:
                 if self.config["ignore_worker_failures"]:
@@ -577,6 +581,7 @@ class Trainer(Trainable):
             raise RuntimeError("Failed to recover from worker crash")
 
         if hasattr(self, "workers") and isinstance(self.workers, WorkerSet):
+            logger.debug("call _sync_filters_if_needed")
             self._sync_filters_if_needed(self.workers)
 
         return result
@@ -600,6 +605,9 @@ class Trainer(Trainable):
     @override(Trainable)
     def setup(self, config: PartialTrainerConfigDict):
         env = self._env_id
+
+        logger.debug("Inside trainer setup")
+
         if env:
             config["env"] = env
             # An already registered env.
@@ -663,6 +671,8 @@ class Trainer(Trainable):
         if self.config["normalize_actions"]:
             inner = self.env_creator
 
+            logger.info("normalize actions")
+
             def normalize(env):
                 import gym  # soft dependency
                 if not isinstance(env, gym.Env):
@@ -699,6 +709,8 @@ class Trainer(Trainable):
 
             # Evaluation setup.
             if self.config.get("evaluation_interval"):
+
+                logger.info("evaluation")
                 # Update env_config with evaluation settings:
                 extra_config = copy.deepcopy(self.config["evaluation_config"])
                 # Assert that user has not unset "in_evaluation".
@@ -710,6 +722,8 @@ class Trainer(Trainable):
                 })
                 logger.debug(
                     "using evaluation_config: {}".format(extra_config))
+
+                logger.debug("Before calling _make_workers")
 
                 self.evaluation_workers = self._make_workers(
                     env_creator=self.env_creator,
@@ -786,6 +800,8 @@ class Trainer(Trainable):
         Note that this default implementation does not do anything beyond
         merging evaluation_config with the normal trainer config.
         """
+        logger.debug("------------------- evaluate")
+
         # Call the `_before_evaluate` hook.
         self._before_evaluate()
         # Sync weights to the evaluation WorkerSet.
@@ -838,9 +854,10 @@ class Trainer(Trainable):
             workers: Optional[List[RolloutWorker]] = None,
     ) -> None:
         """Sync "main" weights to given WorkerSet or list of workers."""
+        logger.debug("****************************************** Inside _sync_weights_to_workers *************************************")
         assert worker_set is not None
         # Broadcast the new policy weights to all evaluation workers.
-        logger.info("Synchronizing weights to evaluation workers.")
+        logger.debug("Synchronizing weights to evaluation workers.")
         weights = ray.put(self.workers.local_worker().save())
         worker_set.foreach_worker(lambda w: w.restore(ray.get(weights)))
 
@@ -1016,6 +1033,7 @@ class Trainer(Trainable):
             policies (list): Optional list of policies to return weights for,
                 or None for all policies.
         """
+        logger.info("trainer set weights")
         return self.workers.local_worker().get_weights(policies)
 
     @PublicAPI
@@ -1025,6 +1043,7 @@ class Trainer(Trainable):
         Args:
             weights (dict): Map of policy ids to weights to set.
         """
+        logger.info("trainer set weights")
         self.workers.local_worker().set_weights(weights)
 
     @DeveloperAPI
@@ -1297,6 +1316,8 @@ class Trainer(Trainable):
     def __setstate__(self, state: dict):
         if "worker" in state:
             self.workers.local_worker().restore(state["worker"])
+            logger.debug("Worker put")
+
             remote_state = ray.put(state["worker"])
             for r in self.workers.remote_workers():
                 r.restore.remote(remote_state)

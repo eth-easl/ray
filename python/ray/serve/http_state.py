@@ -46,11 +46,14 @@ class HTTPState:
             return []
 
         if location == DeploymentMode.HeadOnly:
+            #print("DeploymentMode.HeadOnly")
             head_node_resource_key = get_current_node_resource_key()
             target_nodes = [(node_id, node_resource)
                             for node_id, node_resource in target_nodes
                             if node_resource == head_node_resource_key][:1]
+            #print(target_nodes)
 
+        #print("target_nodes: ", target_nodes)
         return target_nodes
 
     def _start_proxies_if_needed(self) -> None:
@@ -64,6 +67,7 @@ class HTTPState:
             try:
                 proxy = ray.get_actor(name)
             except ValueError:
+
                 logger.info("Starting HTTP proxy with name '{}' on node '{}' "
                             "listening on '{}:{}'".format(
                                 name, node_id, self._config.host,

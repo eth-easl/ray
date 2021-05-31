@@ -25,6 +25,8 @@ void LocalModeObjectStore::PutRaw(std::shared_ptr<msgpack::sbuffer> data,
 
 void LocalModeObjectStore::PutRaw(std::shared_ptr<msgpack::sbuffer> data,
                                   const ObjectID &object_id) {
+
+  //std::cout << "IN  LocalModeObjectStore::PutRaw, object_id: " << object_id << std::endl;
   auto buffer = std::make_shared<::ray::LocalMemoryBuffer>(
       reinterpret_cast<uint8_t *>(data->data()), data->size(), true);
   auto status = memory_store_->Put(

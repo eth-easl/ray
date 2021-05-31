@@ -116,14 +116,22 @@ void ServerConnection::WriteBufferAsync(
 
 Status ServerConnection::ReadBuffer(
     const std::vector<boost::asio::mutable_buffer> &buffer) {
+
   boost::system::error_code error;
   // Loop until all bytes are read while handling interrupts.
   for (const auto &b : buffer) {
     uint64_t bytes_remaining = boost::asio::buffer_size(b);
+
+
+    // RAY_LOG(INFO) << "Inside ServerConnection::ReadBuffer, buffer size: " << bytes_remaining;
     uint64_t position = 0;
     while (bytes_remaining != 0) {
+      //auto start = std::chrono::steady_clock::now();
       size_t bytes_read =
           socket_.read_some(boost::asio::buffer(b + position, bytes_remaining), error);
+      //auto end1 = std::chrono::steady_clock::now();
+      //std::cout << "Blocking read_some took: " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - start).count() << " us" << std::endl;
+
       position += bytes_read;
       bytes_remaining -= bytes_read;
       if (error.value() == EINTR) {
@@ -165,11 +173,16 @@ Status ServerConnection::ReadMessage(int64_t type, std::vector<uint8_t> *message
   int64_t read_cookie, read_type, read_length;
   // Wait for a message header from the client. The message header includes the
   // protocol version, the message type, and the length of the message.
+  //auto start = std::chrono::steady_clock::now();
   RAY_RETURN_NOT_OK(ReadBuffer({
       boost::asio::buffer(&read_cookie, sizeof(read_cookie)),
       boost::asio::buffer(&read_type, sizeof(read_type)),
       boost::asio::buffer(&read_length, sizeof(read_length)),
   }));
+  //auto end2 = std::chrono::steady_clock::now();
+  //std::cout << "Reading first buffers took: " << std::chrono::duration_cast<std::chrono::microseconds>(end2 - start).count() << " us" << std::endl;
+
+
   if (read_cookie != RayConfig::instance().ray_cookie()) {
     std::ostringstream ss;
     ss << "Ray cookie mismatch for received message. "
@@ -183,7 +196,16 @@ Status ServerConnection::ReadMessage(int64_t type, std::vector<uint8_t> *message
     return Status::IOError(ss.str());
   }
   message->resize(read_length);
-  return ReadBuffer({boost::asio::buffer(*message)});
+  //auto end3 = std::chrono::steady_clock::now();
+  //std::cout << "Resizing message took: " << std::chrono::duration_cast<std::chrono::microseconds>(end3 - end2).count() << " us" << std::endl;
+
+
+  auto res = ReadBuffer({boost::asio::buffer(*message)});
+  //auto end1 = std::chrono::steady_clock::now();
+
+  //std::cout << "Reading last buffer took: " << std::chrono::duration_cast<std::chrono::microseconds>(end1 - end3).count() << " us" << std::endl;
+
+  return res;
 }
 
 void ServerConnection::WriteMessageAsync(

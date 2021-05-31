@@ -11,6 +11,8 @@ import ray
 from ray.ray_constants import DEFAULT_OBJECT_PREFIX
 from ray._raylet import ObjectRef
 
+import time
+
 ParsedURL = namedtuple("ParsedURL", "base_url, offset, size")
 logger = logging.getLogger(__name__)
 
@@ -95,8 +97,12 @@ class ExternalStorage(metaclass=abc.ABCMeta):
     def _put_object_to_store(self, metadata, data_size, file_like, object_ref,
                              owner_address):
         worker = ray.worker.global_worker
+
+        start = time.time()
         worker.core_worker.put_file_like_object(metadata, data_size, file_like,
                                                 object_ref, owner_address)
+        end = time.time()
+        print("put_file_like_object of object_ref ", object_ref, " took: ", (end-start)*1000, " ms")
 
     def _write_multiple_objects(self, f: IO, object_refs: List[ObjectRef],
                                 owner_addresses: List[str],
@@ -277,6 +283,8 @@ class FileSystemStorage(ExternalStorage):
 
     def restore_spilled_objects(self, object_refs: List[ObjectRef],
                                 url_with_offset_list: List[str]):
+
+        print("----------------------- Inside restore_spilled_objects 1")
         total = 0
         for i in range(len(object_refs)):
             object_ref = object_refs[i]
@@ -287,6 +295,7 @@ class FileSystemStorage(ExternalStorage):
             offset = parsed_result.offset
             # Read a part of the file and recover the object.
             with open(base_url, "rb") as f:
+                start = time.time()
                 f.seek(offset)
                 address_len = int.from_bytes(f.read(8), byteorder="little")
                 metadata_len = int.from_bytes(f.read(8), byteorder="little")
@@ -297,6 +306,8 @@ class FileSystemStorage(ExternalStorage):
                 owner_address = f.read(address_len)
                 metadata = f.read(metadata_len)
                 # read remaining data to our buffer
+                end = time.time()
+                print("Reading metadata for object ", object_ref, " took ", (end -start)*1000, " ms")
                 self._put_object_to_store(metadata, buf_len, f, object_ref,
                                           owner_address)
         return total
@@ -395,6 +406,9 @@ class ExternalStorageSmartOpenImpl(ExternalStorage):
 
     def restore_spilled_objects(self, object_refs: List[ObjectRef],
                                 url_with_offset_list: List[str]):
+
+        print("----------------------- Inside restore_spilled_objects 2")
+
         from smart_open import open
         total = 0
         for i in range(len(object_refs)):

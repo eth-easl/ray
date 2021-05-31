@@ -123,6 +123,7 @@ class Worker:
         self.debugger_get_breakpoint = b""
         self._load_code_from_local = False
 
+
     @property
     def connected(self):
         return self.node is not None
@@ -274,13 +275,18 @@ class Worker:
             assert object_ref is None, ("Local Mode does not support "
                                         "inserting with an ObjectRef")
 
+        start = time.time()
         serialized_value = self.get_serialization_context().serialize(value)
+        end = time.time()
+        #print("serialization took ", (end-start)*1000, " ms")
         # This *must* be the first place that we construct this python
         # ObjectRef because an entry with 0 local references is created when
         # the object is Put() in the core worker, expecting that this python
         # reference will be created. If another reference is created and
         # removed before this one, it will corrupt the state in the
         # reference counter.
+        #print("Before calling put_serialized_object")
+
         return ray.ObjectRef(
             self.core_worker.put_serialized_object(
                 serialized_value, object_ref=object_ref))
@@ -324,17 +330,23 @@ class Worker:
         timeout_ms = int(timeout * 1000) if timeout else -1
         data_metadata_pairs = self.core_worker.get_objects(
             object_refs, self.current_task_id, timeout_ms)
+
         debugger_breakpoint = b""
         for (data, metadata) in data_metadata_pairs:
+
             if metadata:
                 metadata_fields = metadata.split(b",")
                 if len(metadata_fields) >= 2 and metadata_fields[1].startswith(
                         ray_constants.OBJECT_METADATA_DEBUG_PREFIX):
                     debugger_breakpoint = metadata_fields[1][len(
                         ray_constants.OBJECT_METADATA_DEBUG_PREFIX):]
-        return self.deserialize_objects(data_metadata_pairs,
-                                        object_refs), debugger_breakpoint
 
+        start = time.time()
+        res = self.deserialize_objects(data_metadata_pairs,
+                                        object_refs), debugger_breakpoint
+        end = time.time()
+        #print("deserialization took ", (end-start)*1000, " ms")
+        return res
     def run_function_on_all_workers(self, function,
                                     run_on_other_drivers=False):
         """Run arbitrary code on all of the workers.
@@ -501,7 +513,7 @@ def init(
         dashboard_port=ray_constants.DEFAULT_DASHBOARD_PORT,
         job_config=None,
         configure_logging=True,
-        logging_level=logging.INFO,
+        logging_level=logging.DEBUG,
         logging_format=ray_constants.LOGGER_FORMAT,
         log_to_driver=True,
         # The following are unstable parameters and their use is discouraged.
@@ -684,6 +696,8 @@ def init(
     if not isinstance(_system_config, dict):
         raise TypeError("The _system_config must be a dict.")
 
+    #print("At init, check whether or not to start a new cluster!\n")
+
     global _global_node
     if redis_address is None:
         # In this case, we need to start a new cluster.
@@ -764,6 +778,7 @@ def init(
             shutdown_at_exit=False,
             spawn_reaper=False,
             connect_only=True)
+
 
     connect(
         _global_node,
@@ -1127,6 +1142,7 @@ def connect(node,
         job_config (ray.job_config.JobConfig): The job configuration.
     """
     # Do some basic checking to make sure we didn't call ray.init twice.
+
     error_message = "Perhaps you called ray.init twice by accident?"
     assert not worker.connected, error_message
     assert worker.cached_functions_to_run is not None, error_message
@@ -1137,6 +1153,7 @@ def connect(node,
             faulthandler.enable(all_threads=False)
     except io.UnsupportedOperation:
         pass  # ignore
+
 
     # Create a Redis client to primary.
     # The Redis client can safely be shared between threads. However,
@@ -1219,12 +1236,15 @@ def connect(node,
     if job_config is None:
         job_config = ray.job_config.JobConfig()
     serialized_job_config = job_config.serialize()
+
+
     worker.core_worker = ray._raylet.CoreWorker(
         mode, node.plasma_store_socket_name, node.raylet_socket_name, job_id,
         gcs_options, node.get_logs_dir_path(), node.node_ip_address,
         node.node_manager_port, node.raylet_ip_address, (mode == LOCAL_MODE),
         driver_name, log_stdout_file_path, log_stderr_file_path,
         serialized_job_config, node.metrics_agent_port)
+
 
     # Create an object for interfacing with the global state.
     # Note, global state should be intialized after `CoreWorker`, because it
@@ -1395,6 +1415,7 @@ def get(object_refs, *, timeout=None):
             or that created one of the objects raised an exception.
     """
     worker = global_worker
+
     worker.check_connected()
 
     if hasattr(
@@ -1439,6 +1460,7 @@ def get(object_refs, *, timeout=None):
                 debugger_breakpoint.decode() if debugger_breakpoint else None)
             rdb.set_trace(frame=frame)
 
+
         return values
 
 
@@ -1456,6 +1478,8 @@ def put(value):
     """
     worker = global_worker
     worker.check_connected()
+
+    #print("put object: ", value, " with size: ", sys.getsizeof(value))
     with profiling.profile("ray.put"):
         try:
             object_ref = worker.put_object(value)

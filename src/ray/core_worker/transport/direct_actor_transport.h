@@ -291,6 +291,8 @@ class DependencyWaiterImpl : public DependencyWaiter {
 
   void Wait(const std::vector<rpc::ObjectReference> &dependencies,
             std::function<void()> on_dependencies_available) override {
+
+    // std::cout << "DependencyWaiterImpl->Wait" << std::endl;
     auto tag = next_request_id_++;
     requests_[tag] = on_dependencies_available;
     RAY_CHECK_OK(dependency_client_.WaitForDirectActorCallArgs(dependencies, tag));

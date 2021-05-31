@@ -59,6 +59,7 @@ Record = namedtuple("Record", ["gauge", "value", "tags"])
 
 class MetricsAgent:
     def __init__(self, metrics_export_port):
+
         assert metrics_export_port is not None
         # OpenCensus classes.
         self.view_manager = stats_module.stats.view_manager
@@ -109,6 +110,8 @@ class MetricsAgent:
         # The list of view data is what we are going to use for the
         # final export to exporter.
         view_data_changed: List[ViewData] = []
+
+        #print("inside _record_metrics")
 
         # Walk the protobufs and convert them to ViewData
         for metric in metrics:

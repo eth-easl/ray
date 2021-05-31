@@ -53,12 +53,26 @@ uint64_t ObjectBufferPool::GetBufferLength(uint64_t chunk_index, uint64_t data_s
 
 std::pair<const ObjectBufferPool::ChunkInfo &, ray::Status> ObjectBufferPool::GetChunk(
     const ObjectID &object_id, uint64_t data_size, uint64_t metadata_size,
-    uint64_t chunk_index) {
+    uint64_t chunk_index, std::unordered_map<ObjectID, double> &read_objects_total) {
   std::lock_guard<std::mutex> lock(pool_mutex_);
   if (get_buffer_state_.count(object_id) == 0) {
+
+    RAY_LOG(INFO) << "object: " << object_id << "not in get_buffer_state_";
     plasma::ObjectBuffer object_buffer;
+
+    double start_time = absl::GetCurrentTimeNanos() / 1e9;
+
+    // TODO[fot]: measure time here! for all chunks of the object!
     RAY_CHECK_OK(
         store_client_.Get(&object_id, 1, 0, &object_buffer, /*is_from_worker=*/false));
+    double end_time = absl::GetCurrentTimeNanos() / 1e9;
+    if (read_objects_total.find(object_id) == read_objects_total.end()) {
+      read_objects_total[object_id] = end_time - start_time;
+    }
+    else {
+       read_objects_total[object_id] += end_time - start_time;
+    }
+
     if (object_buffer.data == nullptr) {
       RAY_LOG(INFO)
           << "Failed to get a chunk of the object: " << object_id
@@ -124,7 +138,7 @@ std::pair<const ObjectBufferPool::ChunkInfo &, ray::Status> ObjectBufferPool::Cr
     create_buffer_state_.emplace(
         std::piecewise_construct, std::forward_as_tuple(object_id),
         std::forward_as_tuple(BuildChunks(object_id, mutable_data, data_size)));
-    RAY_LOG(DEBUG) << "Created object " << object_id
+    RAY_LOG(INFO) << "Created object " << object_id
                    << " in plasma store, number of chunks: " << num_chunks
                    << ", chunk index: " << chunk_index;
     RAY_CHECK(create_buffer_state_[object_id].chunk_info.size() == num_chunks);
@@ -162,7 +176,7 @@ void ObjectBufferPool::AbortCreateChunk(const ObjectID &object_id,
   }
 }
 
-void ObjectBufferPool::SealChunk(const ObjectID &object_id, const uint64_t chunk_index) {
+void ObjectBufferPool::SealChunk(const ObjectID &object_id, const uint64_t chunk_index, std::unordered_map<ObjectID, double>& pull_objects_start, std::unordered_map<ObjectID, double>& write_objects_total) {
   std::lock_guard<std::mutex> lock(pool_mutex_);
   auto it = create_buffer_state_.find(object_id);
   if (it == create_buffer_state_.end() ||
@@ -174,12 +188,25 @@ void ObjectBufferPool::SealChunk(const ObjectID &object_id, const uint64_t chunk
   it->second.chunk_state[chunk_index] = CreateChunkState::SEALED;
   it->second.num_seals_remaining--;
   if (it->second.num_seals_remaining == 0) {
+
     RAY_CHECK_OK(store_client_.Seal(object_id));
     RAY_CHECK_OK(store_client_.Release(object_id));
     create_buffer_state_.erase(it);
-    RAY_LOG(DEBUG) << "Have received all chunks for object " << object_id
+    RAY_LOG(INFO) << "Have received all chunks for object " << object_id
                    << ", last chunk index: " << chunk_index;
+
+    if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
+
+      double end_time =  absl::GetCurrentTimeNanos() / 1e9;
+      RAY_LOG(INFO) << "Getting the object: " << object_id << " took " <<  end_time - pull_objects_start[object_id] << "sec";
+      RAY_LOG(INFO) << "Writing the object to Plasma: " << object_id << " took " << write_objects_total[object_id] << "sec";
+      pull_objects_start.erase(object_id);
+      write_objects_total.erase(object_id);
+    }
+
   }
+
+
 }
 
 void ObjectBufferPool::AbortCreate(const ObjectID &object_id) {

@@ -60,9 +60,33 @@ static Gauge ObjectStoreLocalObjects("object_store_num_local_objects",
                                      "Number of objects currently in the object store.",
                                      "objects");
 
+static Gauge ObjectToy("object_store_toy_example",
+                        "Toy example for Object storage",
+                        "objects");
+
 static Gauge ObjectManagerPullRequests("object_manager_num_pull_requests",
                                        "Number of active pull requests for objects.",
                                        "requests");
+
+static Gauge ObjectManagerPullRequestsTotal("object_manager_num_total_pull_requests",
+                                       "Number of total pull requests for objects.",
+                                       "requests");
+
+static Gauge ObjectManagerBytesSent("object_manager_total_bytes_sent",
+                                       "Number of total bytes sent from this node for objects",
+                                       "bytes");
+
+static Gauge ObjectManagerBytesReceived("object_manager_total_bytes_received",
+                                       "Number of total bytes received by this node for objects",
+                                       "bytes");
+
+static Gauge ObjectManagerNumLocalGetRequests("object_manager_num_local_get_requests",
+                                              "Number of total get requests for local objects.",
+                                              "requests");
+
+static Gauge ObjectManagerNumRemoteGetRequests("object_manager_num_remote_get_requests",
+                                              "Number of total get requests for remote objects.",
+                                              "requests");
 
 static Gauge NumInfeasibleTasks(
     "num_infeasible_tasks",
