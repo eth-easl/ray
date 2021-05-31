@@ -1,0 +1,155 @@
+cluster_name: simplecpucluster
+max_workers: 0
+# check this  later!
+# This executes all commands on all nodes in the docker container,
+# and opens all the necessary ports to support the Ray cluster.
+# Empty string means disabled.
+#docker:
+#  image: "rayproject/ray-ml:latest-cpu" # You can change this to latest-cpu if you don't need GPU support and want a faster startup
+    # image: rayproject/ray:latest-gpu   # use this one if you don't need ML dependencies, it's faster to pull
+    #  container_name: "ray_container"
+  # If true, pulls latest version of image. Otherwise, `docker run` will only pull the image
+  # if no cached version is present.
+  # pull_before_run: True
+  #run_options: []  # Extra options to pass into "docker run"
+
+  # Example of running a GPU head with CPU workers
+  # head_image: "rayproject/ray-ml:latest-gpu"
+  # Allow Ray to automatically detect GPUs
+
+  # worker_image: "rayproject/ray-ml:latest-cpu"
+  # worker_run_options: []
+
+provider:
+    type: gcp
+    region: us-west1
+    availability_zone: us-west1-a
+    project_id: ml-elasticity
+
+    #If enabled, nodes will be stopped when the cluster scales down. If disabled, nodes will be terminated instead. Stopped nodes launch faster than terminated nodes.
+    cache_stopped_nodes: True
+
+auth:
+    ssh_user: ubuntu
+
+available_node_types:
+    ray_head_default:
+        # The resources provided by this node type.
+        resources: {"CPU": 32}
+        # Provider-specific config for the head node, e.g. instance type. By default
+        # Ray will auto-configure unspecified fields such as subnets and ssh-keys.
+        # For more documentation on available fields, see:
+        # https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
+        node_config:
+            machineType: n1-standard-32
+            disks:
+              - boot: true
+                autoDelete: true
+                type: PERSISTENT
+                initializeParams:
+                  diskSizeGb: 100
+                  # See https://cloud.google.com/compute/docs/images for more images
+                  sourceImage: projects/ubuntu-os-cloud/global/images/family/ubuntu-1804-lts
+            # Additional options can be found in in the compute docs at
+            # https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
+
+            # If the network interface is specified as below in both head and worker
+            # nodes, the manual network config is used.  Otherwise an existing subnet is
+            # used.  To use a shared subnet, ask the subnet owner to grant permission
+            # for 'compute.subnetworks.use' to the ray autoscaler account...
+            # networkInterfaces:
+            #   - kind: compute#networkInterface
+            #     subnetwork: path/to/subnet
+            #     aliasIpRanges: []
+    ray_worker_small:
+        # The minimum number of worker nodes of this type to launch.
+        # This number should be >= 0.
+        min_workers: 0
+        max_workers: 0
+        # The maximum number of worker nodes of this type to launch.
+        # This takes precedence over min_workers.
+        # The resources provided by this node type.
+        resources: {"CPU": 8}
+        # Provider-specific config for the head node, e.g. instance type. By default
+        # Ray will auto-configure unspecified fields such as subnets and ssh-keys.
+        # For more documentation on available fields, see:
+        # https://cloud.google.com/compute/docs/reference/rest/v1/instances/insert
+        node_config:
+            machineType: n1-standard-8
+            disks:
+              - boot: true
+                autoDelete: true
+                type: pd-ssd
+                initializeParams:
+                  diskSizeGb: 100
+
+                  # See https://cloud.google.com/compute/docs/images for more images
+                  sourceImage: projects/deeplearning-platform-release/global/images/family/common-cpu
+            # Run workers on preemtible instance by default.
+            # Comment this out to use on-demand.
+            # scheduling:
+            # - preemptible: true
+
+head_node_type: ray_head_default
+
+worker_nodes: {}
+
+file_mounts: {
+        # files and directories to copy to the head and the workers
+        "/home/ubuntu/ray": "/home/fot/Documents/docs/ETH/thesis/ray_opt"
+        #"/home/ubuntu/data_master": "data_master"
+}
+
+# Patterns for files to exclude when running rsync up or rsync down
+rsync_exclude:
+    - "**/.git"
+    - "**/.git/**"
+
+# Patterns for files to exclude when running rsync up or rsync down (difference with the prev. ?)
+rsync_filter:
+    - ".gitingnore"
+
+# these run before the set up commands
+initialization_commands: []
+
+# these run in the head and workers
+# perhaps install own ray version (using a docker image)
+setup_commands:
+        #- pip uninstall ray
+          #- pip install -U ray
+        #- pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-2.0.0.dev0-cp37-cp37m-manylinux2014_x86_64.whl
+        #- sudo apt-get install -y build-essential curl unzip psmisc        
+        #- ray/ci/travis/install-bazel.sh
+        #- cd ray/dashboard/client && npm install && npm run build
+        - cd /home/ubuntu/ray/ && bazel build -c fastbuild //:ray_pkg
+        - cd /home/ubuntu/ray/python &&  sudo python3.7 -m pip install -e . --verbose --force-reinstall        
+        #- pip install tensorflow==
+        #- pip install sklearn
+        #- pip install dask
+        #- pip install keras
+        #- pip install 'ray[rllib]'
+        #- pip install "ray[serve]"
+        #- pip install torch torchvision filelock
+# Command to start ray on the head node. You don't need to change this.
+head_start_ray_commands:
+     - ray stop
+     - ray start --head --port=6379 --metrics-export-port=8085 --system-config {\"metrics_report_interval_ms\":1000} --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --object-store-memory=20000000000 --system-config='{"object_spilling_config":"{\"type\":\"filesystem\",\"params\":{\"directory_path\":\"/tmp/spill\"}}"}' --num-gpus=4
+
+      # Command to start ray on worker nodes. You don't need to change this.
+worker_start_ray_commands:
+    - ray stop 
+    - ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --metrics-export-port=8085 --object-store-memory=3000000000
+# more specific setup commands
+# head_setup_commands:
+#       -str
+# worker_setup_commands:
+#       -str
+
+# Commands to start ray on the head node. You don't need to change this.
+# head_start_ray_commands:
+#       -str
+# worker_start_ray_commands:
+#       -str
+
+
+

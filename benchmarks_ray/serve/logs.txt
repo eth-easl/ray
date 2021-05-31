@@ -1,0 +1,94 @@
+http://localhost:3000/dashboard/snapshot/7F9hBQNbcEPxZNJjasTiv1JU7Fdzv3cD
+
+small data
+----------
+
+intermediate_handles=False:
+
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 1}
+	single client small data 20.63 +- 0.04 requests/s
+	8 clients small data 163.24 +- 1.14 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client small data 20.62 +- 0.04 requests/s
+        8 clients small data 163.81 +- 0.76 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client small data 20.54 +- 0.06 requests/s
+        8 clients small data 164.24 +- 0.47 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 8}
+        single client small data 20.56 +- 0.05 requests/s
+        8 clients small data 163.66 +- 0.25 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client small data 20.6 +- 0.04 requests/s
+        8 clients small data 163.9 +- 0.17 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client small data 20.65 +- 0.04 requests/s
+        8 clients small data 163.74 +- 0.51 requests/s
+
+	
+intermediate_handles=True:
+
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 1}
+	single client small data 19.06 +- 0.06 requests/s
+        8 clients small data 148.84 +- 1.88 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client small data 19.11 +- 0.03 requests/s
+        8 clients small data 150.27 +- 0.73 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client small data 19.05 +- 0.04 requests/s
+        8 clients small data 150.86 +- 0.59 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 8}
+        single client small data 19.02 +- 0.02 requests/s
+        8 clients small data 149.86 +- 0.56 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client small data 19.0 +- 0.08 requests/s
+        8 clients small data 150.13 +- 0.51 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client small data 19.02 +- 0.03 requests/s
+        8 clients small data 150.65 +- 0.47 requests/
+
+
+large data - 1MB
+----------------
+
+intermediate_handles=False:
+
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 1}
+	single client large data 18.95 +- 0.04 requests/s 
+	8 clients large data 130.07 +- 1.39 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client large data 19.02 +- 0.04 requests/s
+        8 clients large data 135.62 +- 1.07 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 1}
+        single client large data 18.99 +- 0.01 requests/s
+        8 clients large data 129.13 +- 5.21 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 8}
+        single client large data 17.3 +- 0.24 requests/s
+        8 clients large data 130.43 +- 1.17 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client large data 17.88 +- 0.19 requests/s
+        8 clients large data 133.92 +- 0.66 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 8}
+        single client large data 18.3 +- 0.19 requests/s
+        8 clients large data 129.26 +- 0.79 requests/s
+
+intermediate_handles=True:
+
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 1}, intermediate_handles=True:
+        single client large data 14.73 +- 0.11 requests/s
+        8 clients large data 124.73 +- 0.85 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 1}, intermediate_handles=True:
+        single client large data 14.75 +- 0.1 requests/s
+        8 clients large data 128.2 +- 1.22 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 1}, intermediate_handles=True:
+        single client large data 14.59 +- 0.22 requests/s
+        8 clients large data 127.21 +- 0.66 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 1, 'num_replicas': 8}, intermediate_handles=True:
+        single client large data 15.55 +- 0.7 requests/s
+        8 clients large data 129.03 +- 0.25 requests/s
+{'max_batch_size': 1, 'max_concurrent_queries': 10000, 'num_replicas': 8}, intermediate_handles=True:
+        single client large data 16.32 +- 0.03 requests/s
+        8 clients large data 128.35 +- 0.35 requests/s
+{'max_batch_size': 10000, 'max_concurrent_queries': 10000, 'num_replicas': 8}, intermediate_handles=True:
+        single client large data 16.16 +- 0.09 requests/s
+        8 clients large data 129.47 +- 1.65 requests/s
+

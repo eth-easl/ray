@@ -1,0 +1,82 @@
+Sklearn- SVC hyperparameter tuning
+
+
+
+TF1 - Par Server
+
+
+
+Local 7 workers, 1000 epochs:
+
+
+Elapsed(s):  441.9839608669281
++ 100us latency: 426.8425352573395  
++ 5ms latency:  468.08750343322754 - 6%
++ 10ms latency: 520.251707315445 - 18%
+
+Remote:
+Elapsed(s): 629.3283796310425 - 42% 
+
+23 workers, 1000 epochs
+899.2052283287048
++ 5ms: 988.6367122091101 - 9%
++ 10ms: 1162.0073902606964 - 29%
+
+RLlib - APPO
+Local: 7 workers
+201.36
++100us: 201
++1ms: 215
++5ms: 231
++10ms: 245
+
+RLlib - AlphaZero
+Local: 7 workers
+207.01
++100us: 213.8
++1ms: 230.23
++5ms:
++10ms:
+
+RLlib - R2D2
+
+Local: 7 workers
+226.15 sec
++ 100us: 225 
++ 1ms: 252.2
++ 5ms: 257
++ 10ms: 267.53
+
+Ray serve
+
+Local
+1 replica - 2 clients - 500 req each
+Base: 210.50707602500916 sec
++100us: 213.6608157157898 
++1ms: 219.2880687713623
++5ms: 218.49880623817444
++10ms: 222.5605013370514
+
+Clients remotely: 207.12921833992004
+
+8 replicas - 12 clients - 500 req each
+
+Base:  349.68905878067017
++ 1ms: 357.81553983688354
++ 5ms: 361.9972128868103
+
+
+
+***************************************************************************************************************************
+
+GPU cluster
+
+Setup: 1 node, 4 GPUS, 1 GPU/worker, 
+4 workers
+
+Base: 76.1 sec, 336.7 ips 
++100us: 76.8 sec, 333 ips
++1ms: 77.75 sec, 329.5 ips
++10ms: 84.999 sec, 301.15 ips
++100ms: 156.5 sec, 162.8 ips
+

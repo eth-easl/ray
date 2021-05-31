@@ -1,0 +1,71 @@
+ES:
+
+3 workers, time: 1047.38 sec, reward: 200
+7 workers, time: 554.019 sec, reward: 200
+15 workers, time: 304.287 sec, reward: 200 (10 + 5 workers), w. scaling time: 486.56 sec
+23 workers, time: 214.462 sec, reward: 200,(9+8+7 workers), w. scaling: 443.27 sec 
+31 workers, time: 262.655 sec, reward: 200 (16+2+8+5 workers), w.scaling 450.58 sec
+
+http://localhost:3000/dashboard/snapshot/RThFBbIJwhxyGj2Wp1NUtnyep6UKPt4K?orgId=1
+
+PPO - 4M steps:
+
+3 workers, time: 2721.89 sec, reward: 194.019
+7 workers, time: 2053.2 sec, reward: 200
+15 workers, time: 1412.17 sec, reward: 198.661
+23 workers, time: 1299.69 sec, reward: 194.914
+31 workers, time: 1034.34, reward: 198.802
+
+http://localhost:3000/dashboard/snapshot/3WjcasL7du0K02SuyMC9fZ41POl522tM
+
+DDPPO - 10M steps
+
+* high utilization of workers - low on trainer - low mem utilization - why Plasma util is 0?
+
+3 workers, time: 6535.95 sec, reward: 200
+7 wokers, time: 4832.65 sec , reward: 200
+15 workers, mem util: 11%, time: 3419.66 sec, reward: 200
+31 workers, mem util: , time: 2492.5 sec, reward: 200
+
+http://localhost:3000/dashboard/snapshot/gI52rtiN1iE7YEAB8nge3sqS5qw2PdNT
+
+APPO - 10M steps
+
+* high utilization of workers and trainer
+
+7 workers, 1576.21 sec, reward: 200
+15 workers, 1032.05 sec, reward: 200
+23 workers, 939.131 sec
+31 workers, 1191.47 sec
+
+http://localhost:3000/dashboard/snapshot/f34W0VitVQNhx0SqdjG2ElMXw3Cs2s6H?orgId=1
+http://localhost:3000/dashboard/snapshot/5UuB32JokOUGXidbgRquhIXUFRv7y0qN?orgId=1
+
+DQN - 5M steps
+
+7 workers, 2663.62 sec
+15 workers, 1402.65 sec
+23 workers, 923.402 sec
+31 workers, 739.301 sec
+
+http://localhost:3000/dashboard/snapshot/UUXz7RvRMILDGlIwlkE5Vs8vYrZPTxy0
+http://localhost:3000/dashboard/snapshot/XY1UEIpAcgMhB7MQy6335uT77zia9A68?orgId=1&from=1618182188000&to=1618183388932
+
+AlphaZero - huge variations in utilization
+
+7 workers, 2253.95 sec
+15 workers, 1091.51 sec
+23 workers, 724.666 sec
+31 workers, 531.116 sec
+
+http://localhost:3000/dashboard/snapshot/BhW1v53K5AUOtq3O1MHvTxdBRoioRTLW?orgId=1
+http://localhost:3000/dashboard/snapshot/HITCezmejv0kSXsFAgK5V6sNX6DnJOom?orgId=1
+
+APEX-DQN
+
+7 workers, 1971.26 sec
+15 workers, 891.346 sec
+23 workers, 616.001 sec
+31 workers, 447.49 sec
+
+http://localhost:3000/dashboard/snapshot/OtjYbBzaKXfx9okqDtW2hwXmyV2ztLmg

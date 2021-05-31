@@ -1,0 +1,38 @@
+[2021-04-29 10:56:33,753 I 7481 7481] core_worker.cc:136: Constructing CoreWorkerProcess. pid: 7481
+[2021-04-29 10:56:33,757 I 7481 7481] core_worker.cc:356: Constructing CoreWorker, worker_id: f59455d11865c6879e030c4a3d8f24afb31528335943d4f82c28b55f
+[2021-04-29 10:56:33,757 I 7481 7481] grpc_server.cc:71: worker server started, listening on port 10005.
+[2021-04-29 10:56:33,762 I 7481 7481] core_worker.cc:423: Initializing worker at address: 10.138.0.51:10005, worker ID f59455d11865c6879e030c4a3d8f24afb31528335943d4f82c28b55f, raylet 8bcacbab4b7f4be74ce05e031b7b9502df7551f5c0139afe5c17be3e
+[2021-04-29 10:56:33,764 I 7481 7481] gcs_pub_sub.cc:46: ------ GcsPubSub::SubscribeAll
+[2021-04-29 10:56:33,764 I 7481 7481] gcs_pub_sub.cc:71: Channel: NODE:*
+[2021-04-29 10:56:33,764 I 7481 7481] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: NODE:*
+[2021-04-29 10:56:33,774 I 7481 7481] client.cc:330: called plasma_create on conn 50 with size 8 and metadata size 0
+[2021-04-29 10:56:33,775 I 7481 7481] core_worker.cc:285: Worker f59455d11865c6879e030c4a3d8f24afb31528335943d4f82c28b55f is created.
+[2021-04-29 10:56:33,775 I 7481 7481] io_service_pool.cc:36: IOServicePool is running with 1 io_service.
+[2021-04-29 10:56:33,776 I 7481 7504] service_based_accessor.cc:583: Received notification for node id = 8bcacbab4b7f4be74ce05e031b7b9502df7551f5c0139afe5c17be3e, IsAlive = 1
+[2021-04-29 10:56:33,777 I 7481 7504] direct_actor_transport.cc:372: Inside CoreWorkerDirectTaskReceiver::HandleTask for task: Args: 2
+[2021-04-29 10:56:34,662 I 7481 7504] core_worker.cc:2576: timestamp: 1619693794662, put requests 0, get requests 1, object sizes: 1048590
+[2021-04-29 10:56:34,678 I 7481 7504] service_based_accessor.cc:583: Received notification for node id = c206a7cec11b53aee346ebff8643687afef337c9d9655489457bd6b4, IsAlive = 1
+[2021-04-29 10:56:35,665 I 7481 7504] core_worker.cc:2576: timestamp: 1619693795665, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:36,671 I 7481 7504] core_worker.cc:2576: timestamp: 1619693796671, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:37,677 I 7481 7504] core_worker.cc:2576: timestamp: 1619693797677, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:38,682 I 7481 7504] core_worker.cc:2576: timestamp: 1619693798682, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:39,686 I 7481 7504] core_worker.cc:2576: timestamp: 1619693799686, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:40,692 I 7481 7504] core_worker.cc:2576: timestamp: 1619693800692, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:41,697 I 7481 7504] core_worker.cc:2576: timestamp: 1619693801697, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:42,702 I 7481 7504] core_worker.cc:2576: timestamp: 1619693802702, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:43,708 I 7481 7504] core_worker.cc:2576: timestamp: 1619693803708, put requests 0, get requests 1, object sizes: 
+[2021-04-29 10:56:43,786 I 7481 7481] core_worker.cc:1930: Creating return object 380ca2f4eadfd5a8ffffffffffffffffffffffff0200000001000000
+[2021-04-29 10:56:43,786 I 7481 7481] core_worker.cc:1064: put_requests1, size: 1048590
+[2021-04-29 10:56:43,786 I 7481 7481] client.cc:330: called plasma_create on conn 50 with size 1048590 and metadata size 5
+[2021-04-29 10:56:43,787 I 7481 7481] core_worker.cc:2029: Sealing object 380ca2f4eadfd5a8ffffffffffffffffffffffff0200000001000000
+[2021-04-29 10:56:43,787 I 7481 7481] core_worker.cc:1093: Pinning sealed object 380ca2f4eadfd5a8ffffffffffffffffffffffff0200000001000000
+[2021-04-29 10:56:44,713 I 7481 7504] core_worker.cc:2576: timestamp: 1619693804713, put requests 1, get requests 1, object sizes: 1048590
+[2021-04-29 10:56:45,718 I 7481 7504] core_worker.cc:2576: timestamp: 1619693805718, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:46,723 I 7481 7504] core_worker.cc:2576: timestamp: 1619693806723, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:47,729 I 7481 7504] core_worker.cc:2576: timestamp: 1619693807729, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:48,733 I 7481 7504] core_worker.cc:2576: timestamp: 1619693808733, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:49,738 I 7481 7504] core_worker.cc:2576: timestamp: 1619693809738, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:50,745 I 7481 7504] core_worker.cc:2576: timestamp: 1619693810745, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:51,750 I 7481 7504] core_worker.cc:2576: timestamp: 1619693811750, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:52,756 I 7481 7504] core_worker.cc:2576: timestamp: 1619693812756, put requests 1, get requests 1, object sizes: 
+[2021-04-29 10:56:53,762 I 7481 7504] core_worker.cc:2576: timestamp: 1619693813762, put requests 1, get requests 1, object sizes: 

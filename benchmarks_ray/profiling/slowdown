@@ -1,0 +1,5 @@
+,latency,Train_slow,Serve_slow,Rllib_slow, 
+100, 0.0, 1.4,
+1000, 6.0, 4.2
+5000, 10.0, 4.7
+10000, 18.0, 5.7
