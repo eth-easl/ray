@@ -70,6 +70,8 @@ void TaskManager::AddPendingTask(const rpc::Address &caller_address,
 
   {
     absl::MutexLock lock(&mu_);
+
+    RAY_LOG(INFO) << "Add task " << spec.TaskId() << " to submissible_tasks_";
     RAY_CHECK(submissible_tasks_
                   .emplace(spec.TaskId(), TaskEntry(spec, max_retries, num_returns))
                   .second);
@@ -80,6 +82,9 @@ void TaskManager::AddPendingTask(const rpc::Address &caller_address,
 Status TaskManager::ResubmitTask(const TaskID &task_id,
                                  std::vector<ObjectID> *task_deps) {
   TaskSpecification spec;
+
+  RAY_LOG(INFO) << "Resubmit the task " << task_id ;
+
   bool resubmit = false;
   {
     absl::MutexLock lock(&mu_);
@@ -173,7 +178,7 @@ size_t TaskManager::NumPendingTasks() const {
 void TaskManager::CompletePendingTask(const TaskID &task_id,
                                       const rpc::PushTaskReply &reply,
                                       const rpc::Address &worker_addr) {
-  RAY_LOG(DEBUG) << "Completing task " << task_id;
+  RAY_LOG(INFO) << "Completing task " << task_id;
 
   //std::cout << "IN CompletePendingTask, task_id: " << task_id << std::endl;
 
@@ -271,7 +276,7 @@ bool TaskManager::PendingTaskFailed(const TaskID &task_id, rpc::ErrorType error_
                                     Status *status) {
   // Note that this might be the __ray_terminate__ task, so we don't log
   // loudly with ERROR here.
-  RAY_LOG(DEBUG) << "Task " << task_id << " failed with error "
+  RAY_LOG(INFO) << "Task " << task_id << " failed with error "
                  << rpc::ErrorType_Name(error_type);
   int num_retries_left = 0;
   TaskSpecification spec;

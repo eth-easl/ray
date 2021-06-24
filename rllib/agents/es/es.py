@@ -121,6 +121,8 @@ class Worker:
 
     def do_rollouts(self, params, timestep_limit=None):
         # Set the network weights.
+
+        # print("---------------------------------------", params.shape, params.dtype)
         self.policy.set_flat_weights(params)
 
         noise_indices, returns, sign_returns, lengths = [], [], [], []

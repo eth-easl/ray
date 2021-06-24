@@ -420,6 +420,8 @@ void PlasmaStore::ReturnFromGet(GetRequest *get_req) {
   if (s.ok()) {
     // Send all of the file descriptors for the present objects.
     for (MEMFD_TYPE store_fd : store_fds) {
+
+      RAY_LOG(INFO) << "------------------ Send fd: " << store_fd ;
       Status send_fd_status = get_req->client->SendFd(store_fd);
       if (!send_fd_status.ok()) {
         RAY_LOG(ERROR) << "Failed to send mmap results to client on fd "

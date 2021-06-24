@@ -4045,6 +4045,9 @@ static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
 
 /* Get memory from system using MORECORE or MMAP */
 static void* sys_alloc(mstate m, size_t nb) {
+
+  printf("----------------- Inside sys_alloc with size: %lu\n", nb);
+
   char* tbase = CMFAIL;
   size_t tsize = 0;
   flag_t mmap_flag = 0;
@@ -4054,6 +4057,7 @@ static void* sys_alloc(mstate m, size_t nb) {
 
   /* Directly map large chunks, but only if already initialized */
   if (use_mmap(m) && nb >= mparams.mmap_threshold && m->topsize != 0) {
+    printf("----------------- Case 1\n");
     void* mem = mmap_alloc(m, nb);
     if (mem != 0)
       return mem;
@@ -4151,6 +4155,9 @@ static void* sys_alloc(mstate m, size_t nb) {
     RELEASE_MALLOC_GLOBAL_LOCK();
   }
 
+  printf("----------------- Bp 1\n");
+
+
   if (HAVE_MMAP && tbase == CMFAIL) {  /* Try MMAP */
     char* mp = (char*)(CALL_MMAP(asize));
     if (mp != CMFAIL) {
@@ -4177,6 +4184,9 @@ static void* sys_alloc(mstate m, size_t nb) {
       }
     }
   }
+
+  printf("----------------- Bp 2\n");
+
 
   if (tbase != CMFAIL) {
 
@@ -4247,6 +4257,9 @@ static void* sys_alloc(mstate m, size_t nb) {
       return chunk2mem(p);
     }
   }
+
+    printf("----------------- Bp 3\n");
+
 
   MALLOC_FAILURE_ACTION;
   return 0;
@@ -4575,6 +4588,9 @@ void* dlmalloc(size_t bytes) {
      The ugly goto's here ensure that postaction occurs along all paths.
   */
 
+
+  printf("----------------------- Inside dlmalloc!\n");
+
 #if USE_LOCKS
   ensure_initialization(); /* initialize in sys_alloc if not using locks */
 #endif
@@ -4645,7 +4661,10 @@ void* dlmalloc(size_t bytes) {
       }
     }
 
+    printf("------------ gm->dvsize is: %lu\n", gm->dvsize);
+
     if (nb <= gm->dvsize) {
+
       size_t rsize = gm->dvsize - nb;
       mchunkptr p = gm->dv;
       if (rsize >= MIN_CHUNK_SIZE) { /* split dv */
@@ -5269,6 +5288,8 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
 }
 
 void* dlmemalign(size_t alignment, size_t bytes) {
+
+  printf("------------------------ dlmemalign with size: %lu\n", bytes);
   if (alignment <= MALLOC_ALIGNMENT) {
     return dlmalloc(bytes);
   }
@@ -5299,6 +5320,8 @@ int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
 }
 
 void* dlvalloc(size_t bytes) {
+
+  printf("-------- Inside dlvalloc %lu bytes\n", bytes);
   size_t pagesz;
   ensure_initialization();
   pagesz = mparams.page_size;
@@ -5306,6 +5329,9 @@ void* dlvalloc(size_t bytes) {
 }
 
 void* dlpvalloc(size_t bytes) {
+
+  printf("-------- Inside dlpvalloc %lu bytes\n", bytes);
+
   size_t pagesz;
   ensure_initialization();
   pagesz = mparams.page_size;
@@ -5509,6 +5535,8 @@ size_t destroy_mspace(mspace msp) {
 */
 
 void* mspace_malloc(mspace msp, size_t bytes) {
+
+  printf("----------------------- mspace_malloc")
   mstate ms = (mstate)msp;
   if (!ok_magic(ms)) {
     USAGE_ERROR_ACTION(ms,ms);

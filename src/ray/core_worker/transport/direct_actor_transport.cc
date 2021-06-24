@@ -59,7 +59,7 @@ void CoreWorkerDirectActorTaskSubmitter::KillActor(const ActorID &actor_id,
 }
 
 Status CoreWorkerDirectActorTaskSubmitter::SubmitTask(TaskSpecification task_spec) {
-  RAY_LOG(DEBUG) << "Submitting task " << task_spec.TaskId();
+  RAY_LOG(INFO) << "Submitting task " << task_spec.TaskId();
   RAY_CHECK(task_spec.IsActorTask());
 
   bool task_queued = false;
@@ -103,6 +103,8 @@ Status CoreWorkerDirectActorTaskSubmitter::SubmitTask(TaskSpecification task_spe
     auto status = Status::IOError("cancelling all pending tasks of dead actor");
     // No need to increment the number of completed tasks since the actor is
     // dead.
+    RAY_LOG(INFO) << "Call task_finisher_->PendingTaskFailed";
+
     RAY_UNUSED(!task_finisher_->PendingTaskFailed(task_spec.TaskId(),
                                                   rpc::ErrorType::ACTOR_DIED, &status));
   }
@@ -202,6 +204,8 @@ void CoreWorkerDirectActorTaskSubmitter::DisconnectActor(const ActorID &actor_id
       auto status = Status::IOError("cancelling all pending tasks of dead actor");
       // No need to increment the number of completed tasks since the actor is
       // dead.
+      RAY_LOG(INFO) << "Call task_finisher_->PendingTaskFailed";
+
       RAY_UNUSED(!task_finisher_->PendingTaskFailed(task_spec.TaskId(),
                                                     rpc::ErrorType::ACTOR_DIED, &status));
       head = requests.erase(head);
@@ -309,6 +313,7 @@ void CoreWorkerDirectActorTaskSubmitter::PushActorTask(const ClientQueue &queue,
         } else if (status.ok()) {
           task_finisher_->CompletePendingTask(task_id, reply, addr);
         } else {
+          RAY_LOG(INFO) << "Call task_finisher_->PendingTaskFailed";
           bool will_retry = task_finisher_->PendingTaskFailed(
               task_id, rpc::ErrorType::ACTOR_DIED, &status);
           if (will_retry) {
@@ -462,7 +467,7 @@ void CoreWorkerDirectTaskReceiver::HandleTask(
         send_reply_callback(status, nullptr, nullptr);
       }
     } else {
-      RAY_CHECK(objects_valid) << return_objects.size() << "  " << num_returns;
+      RAY_CHECK(objects_valid) << return_objects.size() << " ....  " << num_returns;
       send_reply_callback(status, nullptr, nullptr);
     }
   };

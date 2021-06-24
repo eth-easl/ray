@@ -83,11 +83,21 @@ void create_and_mmap_buffer(int64_t size, void **pointer, HANDLE *handle) {
 void create_and_mmap_buffer(int64_t size, void **pointer, int *fd) {
   // Create a buffer. This is creating a temporary file and then
   // immediately unlinking it so we do not leave traces in the system.
+
+  std::cout << "Inside create_and_mmap_buffer" << std::endl;
   std::string file_template = plasma_config->directory;
   file_template += "/plasmaXXXXXX";
+
+  std::cout << "file is " << file_template << std::endl;
+
   std::vector<char> file_name(file_template.begin(), file_template.end());
   file_name.push_back('\0');
   *fd = mkstemp(&file_name[0]);
+  //*fd = mkostemp(&file_name[0], O_SYNC);
+
+
+  std::cout << "fd for this file is: " << *fd << std::endl;
+
   if (*fd < 0) {
     RAY_LOG(FATAL) << "create_buffer failed to open file " << &file_name[0];
   }
@@ -122,6 +132,9 @@ void *fake_mmap(size_t size) {
   // Add kMmapRegionsGap so that the returned pointer is deliberately not
   // page-aligned. This ensures that the segments of memory returned by
   // fake_mmap are never contiguous.
+
+    std::cout << "Inside fake_mmap with size: " <<  size << std::endl;
+
   size += kMmapRegionsGap;
 
   void *pointer;
@@ -137,16 +150,24 @@ void *fake_mmap(size_t size) {
 
   // We lie to dlmalloc about where mapped memory actually lives.
   pointer = pointer_advance(pointer, kMmapRegionsGap);
-  RAY_LOG(DEBUG) << pointer << " = fake_mmap(" << size << ")";
+  RAY_LOG(INFO) << pointer << " = fake_mmap(" << size << ")";
   return pointer;
 }
 
 int fake_munmap(void *addr, int64_t size) {
+
+  std::cout << "Inside fake_munmap" << std::endl;
+
+
   RAY_LOG(DEBUG) << "fake_munmap(" << addr << ", " << size << ")";
   addr = pointer_retreat(addr, kMmapRegionsGap);
   size += kMmapRegionsGap;
 
   auto entry = mmap_records.find(addr);
+
+  for (auto it: mmap_records) {
+    std::cout << "address: " << it.first << ",fd: " << it.second.fd << ", size: " << it.second.size << std::endl;
+  }
 
   if (entry == mmap_records.end() || entry->second.size != size) {
     // Reject requests to munmap that don't directly match previous
@@ -166,6 +187,8 @@ int fake_munmap(void *addr, int64_t size) {
     close(entry->second.fd);
   }
 #endif
+
+  std::cout << " Why erase!!!!!!!!!!!!!!!!! " << std::endl;
 
   mmap_records.erase(entry);
   return r;

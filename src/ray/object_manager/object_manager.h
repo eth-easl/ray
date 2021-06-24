@@ -100,8 +100,8 @@ class ObjectManagerInterface {
   virtual uint64_t Pull(const std::vector<rpc::ObjectReference> &object_refs) = 0;
   virtual void CancelPull(uint64_t request_id) = 0;
   virtual bool PullRequestActiveOrWaitingForMetadata(uint64_t request_id) const = 0;
-  virtual void AddLocalGet() = 0;
-  virtual void AddRemoteGet() = 0;
+  virtual void AddLocalGet(const ObjectID &object_id) = 0;
+  virtual void AddRemoteGet(const ObjectID &object_id) = 0;
   virtual ~ObjectManagerInterface(){};
 };
 
@@ -266,10 +266,10 @@ class ObjectManager : public ObjectManagerInterface,
   uint64_t Pull(const std::vector<rpc::ObjectReference> &object_refs) override;
 
    /// Increase local get request counter
-  void AddLocalGet();
+  void AddLocalGet(const ObjectID &object_id);
 
   /// Increase remote get request counter
-  void AddRemoteGet();
+  void AddRemoteGet(const ObjectID &object_id);
 
   /// Cancels the pull request with the given ID. This cancels any fetches for
   /// objects that were passed to the original pull request, if no other pull
@@ -455,6 +455,9 @@ class ObjectManager : public ObjectManagerInterface,
   /// Mapping from locally available objects to information about those objects
   /// including when the object was last pushed to other object managers.
   std::unordered_map<ObjectID, LocalObjectInfo> local_objects_;
+
+  /// Mapping from locally available objects to number of accesses to these objects
+  std::unordered_map<ObjectID, size_t> local_objects_cnt_;
 
 
   /// Mapping from objects that are being pulled from remote nodes to the time

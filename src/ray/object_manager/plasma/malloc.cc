@@ -37,6 +37,7 @@ void GetMallocMapinfo(void *addr, MEMFD_TYPE *fd, int64_t *map_size, ptrdiff_t *
   for (const auto &entry : mmap_records) {
     if (addr >= entry.first && addr < pointer_advance(entry.first, entry.second.size)) {
       *fd = entry.second.fd;
+      std::cout << "-------------------- FOUND fd for the entry is: " << *fd << ", the segment size is: " << entry.second.size << std::endl;
       *map_size = entry.second.size;
       *offset = pointer_distance(entry.first, addr);
       return;
@@ -50,6 +51,7 @@ void GetMallocMapinfo(void *addr, MEMFD_TYPE *fd, int64_t *map_size, ptrdiff_t *
 int64_t GetMmapSize(MEMFD_TYPE fd) {
   for (const auto &entry : mmap_records) {
     if (entry.second.fd == fd) {
+      std::cout << "-------------- MMAP SIZE of region with fd " << fd << " is: " << entry.second.size << std::endl;
       return entry.second.size;
     }
   }

@@ -126,6 +126,8 @@ class RolloutWorker(ParallelIteratorWorker):
             num_cpus=num_cpus,
             num_gpus=num_gpus,
             memory=memory,
+            max_restarts=-1,
+            max_task_retries=-1,
             object_store_memory=object_store_memory,
             resources=resources)(cls)
 

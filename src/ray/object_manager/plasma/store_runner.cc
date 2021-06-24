@@ -89,6 +89,8 @@ void PlasmaStoreRunner::Start(ray::SpillObjectsCallback spill_objects_callback,
     // large amount of space up front. According to the documentation,
     // dlmalloc might need up to 128*sizeof(size_t) bytes for internal
     // bookkeeping.
+
+    RAY_LOG(INFO) << "Start by allocating a chunk equal to the object store size" ;
     void *pointer = PlasmaAllocator::Memalign(
         kBlockSize, PlasmaAllocator::GetFootprintLimit() - 256 * sizeof(size_t));
     RAY_CHECK(pointer != nullptr);

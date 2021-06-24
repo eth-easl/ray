@@ -141,7 +141,8 @@ class CoreWorkerPlasmaStoreProvider {
   Status Get(const absl::flat_hash_set<ObjectID> &object_ids, int64_t timeout_ms,
              const WorkerContext &ctx,
              absl::flat_hash_map<ObjectID, std::shared_ptr<RayObject>> *results,
-             bool *got_exception, std::vector<int> &obj_sizes, std::atomic<int64_t> *get_requests);
+             bool *got_exception, std::vector<int> &obj_sizes, std::atomic<int64_t> *get_requests,
+             std::atomic<int64_t> *remote_accesses,  std::atomic<int64_t> *total_accesses, std::unordered_map<ObjectID, size_t> &local_objects_cnt);
 
   /// Get objects directly from the local plasma store, without waiting for the
   /// objects to be fetched from another node. This should only be used
@@ -193,7 +194,8 @@ class CoreWorkerPlasmaStoreProvider {
       int64_t timeout_ms, bool fetch_only, bool in_direct_call_task,
       const TaskID &task_id,
       absl::flat_hash_map<ObjectID, std::shared_ptr<RayObject>> *results,
-      bool *got_exception, std::vector<int> &obj_sizes);
+      bool *got_exception, std::vector<int> &obj_sizes,  std::atomic<int64_t> *remote_accesses,
+      std::atomic<int64_t> *total_accesses, std::unordered_map<ObjectID, size_t> &local_objects_cnt);
 
   /// Print a warning if we've attempted too many times, but some objects are still
   /// unavailable. Only the keys in the 'remaining' map are used.
@@ -218,6 +220,10 @@ class CoreWorkerPlasmaStoreProvider {
   uint32_t object_store_full_delay_ms_;
   // Pointer to the shared buffer tracker.
   std::shared_ptr<BufferTracker> buffer_tracker_;
+
+  std::default_random_engine generator;
+  //std::uniform_real_distribution<double> distribution(0.0,1.0);
+
 };
 
 }  // namespace ray

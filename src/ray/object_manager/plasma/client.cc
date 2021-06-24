@@ -212,10 +212,14 @@ PlasmaClient::Impl::~Impl() {}
 uint8_t *PlasmaClient::Impl::GetStoreFdAndMmap(MEMFD_TYPE store_fd_val,
                                                int64_t map_size) {
   auto entry = mmap_table_.find(store_fd_val);
+  RAY_LOG(INFO) << "Map: " << store_fd_val;
   if (entry != mmap_table_.end()) {
+    RAY_LOG(INFO) << "Fd: " << store_fd_val << " already here";
     return entry->second->pointer();
   } else {
     MEMFD_TYPE fd;
+    RAY_LOG(INFO) << "New entry for fd: " << store_fd_val;
+
     RAY_CHECK_OK(store_conn_->RecvFd(&fd));
     mmap_table_[store_fd_val] =
         std::unique_ptr<ClientMmapTableEntry>(new ClientMmapTableEntry(fd, map_size));
@@ -293,6 +297,7 @@ Status PlasmaClient::Impl::HandleCreateReply(const ObjectID &object_id,
   // descriptor.
   if (object.device_num == 0) {
     // The metadata should come right after the data.
+    RAY_LOG(INFO) << "----------- Received from Plasma File Descriptor " << store_fd << " for object " << object_id << " Object offset is: " << object.data_offset;
     RAY_CHECK(object.metadata_offset == object.data_offset + object.data_size);
     *data = std::make_shared<PlasmaMutableBuffer>(
         shared_from_this(), GetStoreFdAndMmap(store_fd, mmap_size) + object.data_offset,
@@ -374,17 +379,25 @@ Status PlasmaClient::Impl::GetBuffers(
     if (object_entry == objects_in_use_.end()) {
       // This object is not currently in use by this client, so we need to send
       // a request to the store.
+
+      //RAY_LOG(INFO) << "------------------------------- OBJECT IS NOT IN USE!";
+
       all_present = false;
     } else if (!object_entry->second->is_sealed) {
       // This client created the object but hasn't sealed it. If we call Get
       // with no timeout, we will deadlock, because this client won't be able to
       // call Seal.
+
+
+
       RAY_CHECK(timeout_ms != -1)
           << "Plasma client called get on an unsealed object that it created";
       RAY_LOG(WARNING)
           << "Attempting to get an object that this client created but hasn't sealed.";
       all_present = false;
     } else {
+
+      //RAY_LOG(INFO) << "------------------------------- OBJECT IS IN USE!";
 
       PlasmaObject *object = &object_entry->second->object;
       std::shared_ptr<Buffer> physical_buf;

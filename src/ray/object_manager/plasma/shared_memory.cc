@@ -26,6 +26,7 @@ ClientMmapTableEntry::ClientMmapTableEntry(MEMFD_TYPE fd, int64_t map_size)
   }
   CloseHandle(fd);  // Closing this fd has an effect on performance.
 #else
+  RAY_LOG(INFO) << "----- Map fd " << fd;
   pointer_ = reinterpret_cast<uint8_t *>(
       mmap(NULL, length_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
   // TODO(pcm): Don't fail here, instead return a Status.

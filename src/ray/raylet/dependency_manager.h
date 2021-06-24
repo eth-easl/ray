@@ -247,6 +247,9 @@ class DependencyManager : public TaskDependencyManagerInterface {
   /// tasks are ready to run and which `ray.wait` requests can be finished.
   std::unordered_set<ray::ObjectID> local_objects_;
 
+  /// Map of locally available objects to the number of accesses to them
+  std::unordered_map<ray::ObjectID, size_t> local_objects_cnt_;
+
   friend class DependencyManagerTest;
 };
 

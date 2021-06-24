@@ -258,10 +258,11 @@ def set_cuda_visible_devices(gpu_ids):
     """
 
     global last_set_gpu_ids
+    gpu_ids_set = set(gpu_ids)
     if last_set_gpu_ids == gpu_ids:
         return  # optimization: already set
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(i) for i in gpu_ids])
+    os.environ["CUDA_VISIBLE_DEVICES"] = ",".join([str(i) for i in gpu_ids_set])
     last_set_gpu_ids = gpu_ids
 
 

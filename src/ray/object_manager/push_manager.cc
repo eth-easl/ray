@@ -22,7 +22,7 @@ namespace ray {
 void PushManager::StartPush(const NodeID &dest_id, const ObjectID &obj_id,
                             int64_t num_chunks,  std::unordered_map<ObjectID, double> &push_objects_start,
                             std::function<void(int64_t)> send_chunk_fn) {
-  //RAY_LOG(INFO) << "PushManager::StartPush for object " << obj_id << "to node " << dest_id;
+  RAY_LOG(INFO) << "PushManager::StartPush for object " << obj_id << "to node " << dest_id;
 
   auto push_id = std::make_pair(dest_id, obj_id);
   if (push_info_.contains(push_id)) {
@@ -31,8 +31,8 @@ void PushManager::StartPush(const NodeID &dest_id, const ObjectID &obj_id,
     return;
   }
 
-  double start_time = absl::GetCurrentTimeNanos() / 1e9;
-  push_objects_start.emplace(obj_id, start_time);
+  // double start_time = absl::GetCurrentTimeNanos() / 1e9;
+  // push_objects_start.emplace(obj_id, start_time);
   RAY_CHECK(num_chunks > 0);
   push_info_[push_id].reset(new PushState(num_chunks, send_chunk_fn));
   ScheduleRemainingPushes();
@@ -73,7 +73,7 @@ void PushManager::ScheduleRemainingPushes() {
         info->chunk_send_fn(info->next_chunk_id++);
         chunks_in_flight_ += 1;
         keep_looping = true;
-        RAY_LOG(DEBUG) << "Sending chunk " << info->next_chunk_id << " of "
+        RAY_LOG(INFO) << "Sending chunk " << info->next_chunk_id << " of "
                        << info->num_chunks << " for push " << push_id.first << ", "
                        << push_id.second << ", chunks in flight " << NumChunksInFlight()
                        << " / " << max_chunks_in_flight_

@@ -1,0 +1,104 @@
+[2021-06-04 16:53:28,426 I 2048 2048] main.cc:238: Starting object manager with configuration: 
+rpc_service_threads_number = 4, object_chunk_size = 5242880
+[2021-06-04 16:53:28,426 I 2048 2048] io_service_pool.cc:36: IOServicePool is running with 1 io_service.
+[2021-06-04 16:53:28,436 I 2048 2048] store_runner.cc:29: Allowing the Plasma store to use up to 10GB of memory.
+[2021-06-04 16:53:28,436 I 2048 2048] store_runner.cc:42: Starting object store with directory /dev/shm and huge page support disabled
+[2021-06-04 16:53:28,436 I 2048 2064] store_runner.cc:79: starting server listening on /tmp/ray/session_2021-06-04_16-51-48_026681_2166/sockets/plasma_store
+[2021-06-04 16:53:28,437 I 2048 2064] store.cc:750: Connect a new Client!
+[2021-06-04 16:53:28,437 I 2048 2048] grpc_server.cc:71: ObjectManager server started, listening on port 8076.
+[2021-06-04 16:53:28,446 I 2048 2048] node_manager.cc:226: Initializing NodeManager with ID 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097
+[2021-06-04 16:53:28,446 I 2048 2064] store.cc:750: Connect a new Client!
+[2021-06-04 16:53:28,447 I 2048 2048] grpc_server.cc:71: NodeManager server started, listening on port 46631.
+[2021-06-04 16:53:28,453 I 2048 2081] agent_manager.cc:76: Monitor agent process with pid 2080, register timeout 30000ms.
+[2021-06-04 16:53:28,453 I 2048 2048] raylet.cc:143: Raylet of id, 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097 started. Raylet consists of node_manager and object_manager. node_manager address: 10.138.0.56:46631 object_manager address: 10.138.0.56:8076 hostname: 10.138.0.56
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:46: ------ GcsPubSub::SubscribeAll
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:71: Channel: NODE:*
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: NODE:*
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:71: Channel: RESOURCES_BATCH:
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: RESOURCES_BATCH:
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:46: ------ GcsPubSub::SubscribeAll
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:71: Channel: WORKER:*
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: WORKER:*
+[2021-06-04 16:53:28,454 I 2048 2048] service_based_accessor.cc:69: ------ ServiceBasedJobInfoAccessor::AsyncSubscribeAll
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:46: ------ GcsPubSub::SubscribeAll
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:71: Channel: JOB:*
+[2021-06-04 16:53:28,454 I 2048 2048] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: JOB:*
+[2021-06-04 16:53:28,457 I 2048 2048] node_manager.cc:823: [UpdateResourceUsage]: received resource usage from unknown node id ece485cad65d36fd226cb2e599aa2aa709d064033ab4147500626555
+[2021-06-04 16:53:28,457 I 2048 2048] service_based_accessor.cc:583: Received notification for node id = 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097, IsAlive = 1
+[2021-06-04 16:53:28,457 I 2048 2048] service_based_accessor.cc:583: Received notification for node id = ece485cad65d36fd226cb2e599aa2aa709d064033ab4147500626555, IsAlive = 1
+[2021-06-04 16:53:28,457 I 2048 2048] gcs_pub_sub.cc:46: ------ GcsPubSub::SubscribeAll
+[2021-06-04 16:53:28,457 I 2048 2048] gcs_pub_sub.cc:71: Channel: NODE_RESOURCE:*
+[2021-06-04 16:53:28,457 I 2048 2048] gcs_pub_sub.cc:93: ExecuteCommandIfPossible. Channel (pattern) key is: NODE_RESOURCE:*
+[2021-06-04 16:53:29,797 I 2048 2048] agent_manager.cc:32: HandleRegisterAgent, ip: 10.138.0.56, port: 62875, pid: 2080
+Inside run!!
+[2021-06-04 16:54:36,845 I 2048 2048] node_manager.cc:422: HandleJobStarted 01000000
+[2021-06-04 16:55:26,805 I 2048 2048] node_manager.cc:422: HandleJobStarted 02000000
+[2021-06-04 16:55:47,728 I 2048 2048] worker_pool.cc:289: Started worker process of 1 worker(s) with pid 2110
+[2021-06-04 16:55:47,736 I 2048 2048] worker_pool.cc:289: Started worker process of 1 worker(s) with pid 2111
+[2021-06-04 16:55:47,836 I 2048 2048] worker_pool.cc:289: Started worker process of 1 worker(s) with pid 2116
+[2021-06-04 16:55:47,937 I 2048 2048] worker_pool.cc:289: Started worker process of 1 worker(s) with pid 2119
+[2021-06-04 16:55:48,037 I 2048 2048] worker_pool.cc:289: Started worker process of 1 worker(s) with pid 2142
+[2021-06-04 16:55:48,062 I 2048 2064] store.cc:750: Connect a new Client!
+[2021-06-04 16:55:48,062 I 2048 2064] store.cc:750: Connect a new Client!
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:916: Received create request for object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000 assigned request ID 1
+[2021-06-04 16:55:48,072 I 2048 2064] create_request_queue.cc:90: ********************** Inside CreateRequestQueue::ProcessRequests()
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:244: PlasmaStore::HandleCreateObjectRequest
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:277: creating object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000 size 8
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:233: Object store current usage 8e-09 / 10 GB.
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:295: AllocateMemory of size: 8 for object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:1056: Finishing create object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000 request ID 1
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:916: Received create request for object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000 assigned request ID 2
+[2021-06-04 16:55:48,072 I 2048 2064] create_request_queue.cc:90: ********************** Inside CreateRequestQueue::ProcessRequests()
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:244: PlasmaStore::HandleCreateObjectRequest
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:277: creating object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000 size 8
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:295: AllocateMemory of size: 8 for object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:1056: Finishing create object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000 request ID 2
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:627: sealing object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:441: PlasmaStore::UpdateObjectGetRequests for object: acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000
+[2021-06-04 16:55:48,072 I 2048 2048] object_manager.cc:179: ------------------- ObjectManager::HandleObjectAdded for object acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:627: sealing object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000
+[2021-06-04 16:55:48,072 I 2048 2064] store.cc:441: PlasmaStore::UpdateObjectGetRequests for object: 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000
+***********  Raylet: DependencyManager::HandleObjectLocal object:acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000
+[2021-06-04 16:55:48,072 I 2048 2048] node_manager.cc:1650: Object local acda960fd51e54e8f44e501f64565fd112846b92159b2f1a00000000,  on 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097, 0 tasks ready
+[2021-06-04 16:55:48,072 I 2048 2048] object_manager.cc:179: ------------------- ObjectManager::HandleObjectAdded for object 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000
+***********  Raylet: DependencyManager::HandleObjectLocal object:45ab73d5f931258307633f535f4313ecd799103f28727c6900000000
+[2021-06-04 16:55:48,072 I 2048 2048] node_manager.cc:1650: Object local 45ab73d5f931258307633f535f4313ecd799103f28727c6900000000,  on 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097, 0 tasks ready
+[2021-06-04 16:55:48,105 I 2048 2048] node_manager.cc:1183: Raylet at NodeManager::ProcessFetchOrReconstructMessage
+[2021-06-04 16:55:48,105 I 2048 2048] node_manager.cc:1188: fetch_only
+[2021-06-04 16:55:48,105 I 2048 2048] dependency_manager.cc:54: ***********  Raylet: DependencyManager::StartOrUpdateWaitRequest from worker 695ead1178f8101ab98679905f13a248d35d070cf35c1ff82aa4ab80
+[2021-06-04 16:55:48,105 I 2048 2048] dependency_manager.cc:69: Object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000not local
+[2021-06-04 16:55:48,105 I 2048 2048] pull_manager.cc:29: Start pull request 1. Bundle size: 1
+[2021-06-04 16:55:48,105 I 2048 2048] pull_manager.cc:36: Pull of object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000
+[2021-06-04 16:55:48,106 I 2048 2048] dependency_manager.cc:80: Started pull for wait request for object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000 request: 1
+[2021-06-04 16:55:48,106 I 2048 2048] node_manager.cc:1183: Raylet at NodeManager::ProcessFetchOrReconstructMessage
+[2021-06-04 16:55:48,106 I 2048 2048] node_manager.cc:1203: reconstruct
+[2021-06-04 16:55:48,106 I 2048 2048] dependency_manager.cc:119: Starting get request for worker 695ead1178f8101ab98679905f13a248d35d070cf35c1ff82aa4ab80
+[2021-06-04 16:55:48,106 I 2048 2048] dependency_manager.cc:125: Worker 695ead1178f8101ab98679905f13a248d35d070cf35c1ff82aa4ab80 called ray.get on object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000
+[2021-06-04 16:55:48,106 I 2048 2048] pull_manager.cc:29: Start pull request 2. Bundle size: 1
+[2021-06-04 16:55:48,107 I 2048 2048] pull_manager.cc:328: Inside TryToMakeObjectLocal
+[2021-06-04 16:55:48,107 I 2048 2048] pull_manager.cc:328: Inside TryToMakeObjectLocal
+[2021-06-04 16:55:48,111 I 2048 2072] object_manager.cc:715: Thread: 140043086968576 Receiving object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000, chunk 0. From start have passed 0.00379777 sec
+[2021-06-04 16:55:48,111 I 2048 2072] object_manager.cc:756: ReceiveObjectChunk on 2b0a2f978371f324d9ddfa82d3a32ae677faeec3fca2ffe4d1460097 from ece485cad65d36fd226cb2e599aa2aa709d064033ab4147500626555 of object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000 chunk index: 0, chunk data size: 10, object size: 5000253
+[2021-06-04 16:55:48,111 I 2048 2072] client.cc:356: called plasma_create on conn 30 with size 5000247 and metadata size 6
+[2021-06-04 16:55:48,111 I 2048 2064] store.cc:904: Received request to create object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000 immediately
+[2021-06-04 16:55:48,111 I 2048 2064] create_request_queue.cc:90: ********************** Inside CreateRequestQueue::ProcessRequests()
+[2021-06-04 16:55:48,111 I 2048 2064] store.cc:244: PlasmaStore::HandleCreateObjectRequest
+[2021-06-04 16:55:48,111 I 2048 2064] store.cc:277: creating object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000 size 5000247
+[2021-06-04 16:55:48,111 I 2048 2064] store.cc:295: AllocateMemory of size: 5000253 for object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000
+[2021-06-04 16:55:48,111 I 2048 2072] object_buffer_pool.cc:141: Created object 81fa1a05d80277e38602eff734d9538d6165e7f30200000003000000 in plasma store, number of chunks: 1, chunk index: 0
+[2021-06-04 16:55:48,111 E 2048 2072] logging.cc:435: *** Aborted at 1622825748 (unix time) try "date -d @1622825748" if you are using GNU date ***
+[2021-06-04 16:55:48,111 E 2048 2072] logging.cc:435: PC: @                0x0 (unknown)
+[2021-06-04 16:55:48,113 E 2048 2072] logging.cc:435: *** SIGSEGV (@0x7f5e38021000) received by PID 2048 (TID 0x7f5e5273b700) from PID 939659264; stack trace: ***
+[2021-06-04 16:55:48,113 E 2048 2072] logging.cc:435:     @     0x55a1f8ce3576 google::(anonymous namespace)::FailureSignalHandler()
+[2021-06-04 16:55:48,113 E 2048 2072] logging.cc:435:     @     0x7f60cff17730 (unknown)
+[2021-06-04 16:55:48,114 E 2048 2072] logging.cc:435:     @     0x7f60cfe7c6ff (unknown)
+[2021-06-04 16:55:48,115 E 2048 2072] logging.cc:435:     @     0x55a1f8a0fd4f ray::ObjectManager::ReceiveObjectChunk()
+[2021-06-04 16:55:48,116 E 2048 2072] logging.cc:435:     @     0x55a1f8a11d7e ray::ObjectManager::HandlePush()
+[2021-06-04 16:55:48,117 E 2048 2072] logging.cc:435:     @     0x55a1f8a04062 _ZN5boost4asio6detail18completion_handlerIZN3ray3rpc14ServerCallImplINS4_27ObjectManagerServiceHandlerENS4_11PushRequestENS4_9PushReplyEE13HandleRequestEvEUlvE_E11do_completeEPvPNS1_19scheduler_operationERKNS_6system10error_codeEm
+[2021-06-04 16:55:48,117 E 2048 2072] logging.cc:435:     @     0x55a1f9027394 boost::asio::detail::scheduler::do_run_one()
+[2021-06-04 16:55:48,118 E 2048 2072] logging.cc:435:     @     0x55a1f9027cc1 boost::asio::detail::scheduler::run()
+[2021-06-04 16:55:48,119 E 2048 2072] logging.cc:435:     @     0x55a1f902c7f3 boost::asio::io_context::run()
+[2021-06-04 16:55:48,120 E 2048 2072] logging.cc:435:     @     0x55a1f8a005a1 ray::ObjectManager::RunRpcService()
+[2021-06-04 16:55:48,120 E 2048 2072] logging.cc:435:     @     0x7f60d0164b2f (unknown)
+[2021-06-04 16:55:48,120 E 2048 2072] logging.cc:435:     @     0x7f60cff0cfa3 start_thread
+[2021-06-04 16:55:48,121 E 2048 2072] logging.cc:435:     @     0x7f60cfe194cf clone

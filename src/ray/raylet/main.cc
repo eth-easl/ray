@@ -211,12 +211,11 @@ int main(int argc, char *argv[]) {
         object_manager_config.plasma_directory = plasma_directory;
         object_manager_config.huge_pages = huge_pages;
 
-        object_manager_config.rpc_service_threads_number =
-            std::min(std::max(2, num_cpus / 4), 8);
+        object_manager_config.rpc_service_threads_number =  std::min(std::max(2, num_cpus / 4), 8);
         object_manager_config.object_chunk_size =
             RayConfig::instance().object_manager_default_chunk_size();
 
-        RAY_LOG(DEBUG) << "Starting object manager with configuration: \n"
+        RAY_LOG(INFO) << "Starting object manager with configuration: \n"
                        << "rpc_service_threads_number = "
                        << object_manager_config.rpc_service_threads_number
                        << ", object_chunk_size = "

@@ -1091,6 +1091,7 @@ cdef class CoreWorker:
         #print("Object exists: ", object_already_exists)
         #print("------------------- In put_serialized_object! Object size: ", total_bytes)
 
+
         if not object_already_exists:
             #print("Object not existing. Add it")
             start = time.time()
@@ -1105,6 +1106,7 @@ cdef class CoreWorker:
                 check_status(CCoreWorkerProcess.GetCoreWorker().Put(
                         CRayObject(data, metadata, c_object_id_vector),
                         c_object_id_vector, c_object_id))
+
             else:
                 obj_bytes = total_bytes
                 with nogil:
@@ -1120,6 +1122,7 @@ cdef class CoreWorker:
                         check_status(
                             CCoreWorkerProcess.GetCoreWorker().SealExisting(
                                         c_object_id, pin_object=False, obj_size=obj_bytes))
+
 
         return c_object_id.Binary()
 

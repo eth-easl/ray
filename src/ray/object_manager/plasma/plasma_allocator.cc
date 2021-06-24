@@ -34,6 +34,8 @@ void *PlasmaAllocator::Memalign(size_t alignment, size_t bytes) {
   if (allocated_ + static_cast<int64_t>(bytes) > footprint_limit_) {
     return nullptr;
   }
+
+  RAY_LOG(INFO) << "------------------------ Inside *PlasmaAllocator::Memalign " ;
   void *mem = dlmemalign(alignment, bytes);
   RAY_CHECK(mem);
   allocated_ += bytes;

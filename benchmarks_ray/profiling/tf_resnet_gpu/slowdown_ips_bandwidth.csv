@@ -1,0 +1,6 @@
+Bandwidth(Gbps),resnet_gpu_ips,resnet_gpu_slowdown
+0,336.7,0
+10,134.33,150
+16,172.65,94.9
+40,242.75,38.72
+100,288.975,16.5

@@ -175,6 +175,13 @@ void ObjectManager::HandleObjectAdded(
   // Notify the object directory that the object has been added to this node.
   ObjectID object_id = ObjectID::FromBinary(object_info.object_id);
   RAY_CHECK(local_objects_.count(object_id) == 0);
+
+  RAY_LOG(INFO) << "------------------- ObjectManager::HandleObjectAdded for object " << object_id;
+
+  if (local_objects_cnt_.find(object_id) == local_objects_cnt_.end())
+    local_objects_cnt_[object_id] = 1;
+  else
+    local_objects_cnt_[object_id] += 1;
   local_objects_[object_id].object_info = object_info;
   used_memory_ += object_info.data_size + object_info.metadata_size;
   ray::Status status =
@@ -219,14 +226,23 @@ ray::Status ObjectManager::SubscribeObjDeleted(
   return ray::Status::OK();
 }
 
-void ObjectManager::AddLocalGet() {
+void ObjectManager::AddLocalGet(const ObjectID &object_id) {
   num_local_get_requests_ += 1;
+  if (local_objects_cnt_.find(object_id) == local_objects_cnt_.end())
+    local_objects_cnt_[object_id] = 1;
+  else
+    local_objects_cnt_[object_id] += 1;
   //RAY_LOG(INFO) << "Local requests: " << num_local_get_requests_ ;
 
 }
 
-void ObjectManager::AddRemoteGet() {
+void ObjectManager::AddRemoteGet(const ObjectID &object_id) {
   num_remote_get_requests_ += 1;
+  if (local_objects_cnt_.find(object_id) == local_objects_cnt_.end())
+    local_objects_cnt_[object_id] = 1;
+  else
+    local_objects_cnt_[object_id] += 1;
+
   //RAY_LOG(INFO) << "Remote requests: " << num_remote_get_requests_ ;
 
 }
@@ -400,7 +416,7 @@ void ObjectManager::Push(const ObjectID &object_id, const NodeID &node_id) {
     owner_address.set_port(object_info.owner_port);
     owner_address.set_worker_id(object_info.owner_worker_id);
 
-    RAY_LOG(DEBUG) << "Sending object chunks of " << object_id << " to node " << node_id
+    RAY_LOG(INFO) << "Sending object chunks of " << object_id << " to node " << node_id
                    << ", number of chunks: " << num_chunks
                    << ", total data size: " << data_size;
 
@@ -459,9 +475,14 @@ void ObjectManager::SendObjectChunk(const UniqueID &push_id, const ObjectID &obj
   }
 
   push_request.set_data(chunk_info.data, chunk_info.buffer_length);
+  //push_request.set_data(chunk_info.data, 10);
 
-  //double end1 = absl::GetCurrentTimeNanos() / 1e9;
-  //RAY_LOG(INFO) << "Preparing for pushing object " << object_id << " took " << end1-start_time << " sec";
+  double end1 = absl::GetCurrentTimeNanos() / 1e9;
+  RAY_LOG(INFO) << "Preparing for pushing the object " << object_id << " took " << end1-start_time << " sec";
+
+
+  std::thread::id this_id = std::this_thread::get_id();
+  RAY_LOG(INFO) << "Thread: " <<  this_id << " Sending object " << object_id << ", chunk " << chunk_index << ". From start have passed " << end1 - push_objects_start[object_id] << " sec";
 
   // record the time cost between send chunk and receive reply
   rpc::ClientCallback<rpc::PushReply> callback =
@@ -689,6 +710,10 @@ void ObjectManager::HandlePush(const rpc::PushRequest &request, rpc::PushReply *
   const std::string &data = request.data();
 
   double start_time = absl::GetCurrentTimeNanos() / 1e9;
+  std::thread::id this_id = std::this_thread::get_id();
+
+  RAY_LOG(INFO) << "Thread: " << this_id << " Receiving object " << object_id << ", chunk " << chunk_index << ". From start have passed " << start_time - pull_objects_start[object_id] << " sec";
+
 
   // if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
 
@@ -696,6 +721,8 @@ void ObjectManager::HandlePush(const rpc::PushRequest &request, rpc::PushReply *
   // }
 
 
+  //usleep(1000000);
+  //bool success = true;
   bool success = ReceiveObjectChunk(node_id, object_id, owner_address, data_size,
                                     metadata_size, chunk_index, data);
   double end_time = absl::GetCurrentTimeNanos() / 1e9;
@@ -770,6 +797,10 @@ void ObjectManager::HandlePull(const rpc::PullRequest &request, rpc::PullReply *
                                rpc::SendReplyCallback send_reply_callback) {
   ObjectID object_id = ObjectID::FromBinary(request.object_id());
   NodeID node_id = NodeID::FromBinary(request.node_id());
+
+  double start_time = absl::GetCurrentTimeNanos() / 1e9;
+  push_objects_start.emplace(object_id, start_time);
+
   //RAY_LOG(INFO) << "Received pull request from node " << node_id << " for object ["
     //             << object_id << "].";
 
@@ -903,6 +934,12 @@ void ObjectManager::RecordMetrics() const {
 
   stats::ObjectManagerNumLocalGetRequests().Record(num_local_get_requests_);
   stats::ObjectManagerNumRemoteGetRequests().Record(num_remote_get_requests_);
+
+  // for (auto it:local_objects_cnt_) {
+  //   std::cout << "object: " << it.first << ", accesses:" << it.second << std::endl;
+  // }
+
+  // std::cout << "*************************************************************************" << std::endl;
 
 }
 

@@ -297,6 +297,10 @@ std::shared_ptr<CoreWorker> CoreWorkerProcess::CreateWorker() {
 }
 
 void CoreWorkerProcess::RemoveWorker(std::shared_ptr<CoreWorker> worker) {
+
+
+
+
   worker->WaitForShutdown();
   if (global_worker_) {
     RAY_CHECK(global_worker_ == worker);
@@ -511,7 +515,7 @@ CoreWorker::CoreWorker(const CoreWorkerOptions &options, const WorkerID &worker_
           // behaviour. TODO(ekl) backoff exponentially.
           uint32_t delay = RayConfig::instance().task_retry_delay_ms();
           RAY_LOG(ERROR) << "Will resubmit task after a " << delay
-                         << "ms delay: " << spec.DebugString();
+                         << " ms delay: " << spec.DebugString();
           absl::MutexLock lock(&mutex_);
           to_resubmit_.push_back(std::make_pair(current_time_ms() + delay, spec));
         } else {
@@ -690,11 +694,30 @@ CoreWorker::CoreWorker(const CoreWorkerOptions &options, const WorkerID &worker_
   last_put_requests=0;
   last_get_requests=0;
 
+  remote_accesses=0;
+  total_accesses=0;
+
   last_recorded_time_ms_ = 0;
 
 }
 
 void CoreWorker::Shutdown() {
+
+    //std::unordered_map<int, int> access_cnt_map;
+
+  // for (auto it:local_objects_cnt_) {
+  //   RAY_LOG(INFO) << "ObjectList: Object: " << it.first << ", accesses: " << it.second;
+
+  //   // if (access_cnt_map.find(it.second) == access_cnt_map.end())
+  //   //   access_cnt_map[it.second] = 1;
+  //   // else
+  //   //   access_cnt_map[it.second] += 1;
+  // }
+
+  // for (auto it: access_cnt_map) {
+  //   RAY_LOG(INFO) << "Timestamp: " << timestamp <<", Number of accesses: " << it.first << ", Objects: " << it.second;
+  // }
+
   io_service_.stop();
   if (options_.worker_type == WorkerType::WORKER) {
     task_execution_service_.stop();
@@ -874,6 +897,7 @@ void CoreWorker::InternalHeartbeat() {
   while (!to_resubmit_.empty() && current_time_ms() > to_resubmit_.front().first) {
     auto &spec = to_resubmit_.front().second;
     if (spec.IsActorTask()) {
+      RAY_LOG(INFO) << "Submit an actor task";
       RAY_CHECK_OK(direct_actor_submitter_->SubmitTask(spec));
     } else {
       RAY_CHECK_OK(direct_task_submitter_->SubmitTask(spec));
@@ -1035,7 +1059,27 @@ Status CoreWorker::CreateOwned(const std::shared_ptr<Buffer> &metadata,
                                    worker_context_.GetNextPutIndex());
   RAY_LOG(INFO) <<  "CoreWorker::CreateOwned: " <<  *object_id << ", of node: " << NodeID::FromBinary(rpc_address_.raylet_id()) << " , of owner: " << WorkerID::FromBinary(rpc_address_.worker_id());
 
-  //usleep(100);
+  double perc=0.0;
+  size_t g = 1000000000;
+  size_t m = 1000000;
+
+  double band_gbps = 100.0;
+  double band = (band_gbps/8) *g;
+
+  std::uniform_real_distribution<double> distribution(0.0,1.0);
+  double number = distribution(generator);
+
+  if (number <= perc) {
+
+    size_t  ms_to_sleep = int(((1.0)*data_size / band) * m);
+    //ms_to_sleep=std::max(ms_to_sleep, (size_t)3500);
+    usleep(ms_to_sleep);
+    remote_accesses+=1;
+    RAY_LOG(INFO) << "CreateOwned: Generated: " << number << " Object: " << object_id << " Data size: " << data_size << " sleep for " << ms_to_sleep;
+  }
+
+  total_accesses+=1;
+
 
   reference_counter_->AddOwnedObject(*object_id, contained_object_ids, rpc_address_,
                                      CurrentCallSite(), data_size + metadata->Size(),
@@ -1069,7 +1113,28 @@ Status CoreWorker::CreateExisting(const std::shared_ptr<Buffer> &metadata,
         "Creating an object with a pre-existing ObjectID is not supported in local mode");
   } else {
     if (data_size > 0) {
-      //usleep(100);
+
+      double perc=0.0;
+      size_t g = 1000000000;
+      size_t m = 1000000;
+
+      double band_gbps = 100.0;
+      double band = (band_gbps/8) *g;
+
+      std::uniform_real_distribution<double> distribution(0.0,1.0);
+      double number = distribution(generator);
+
+      if (number <= perc) {
+
+        size_t  ms_to_sleep = int(((1.0)*data_size / band) * m);
+        //ms_to_sleep=std::max(ms_to_sleep, (size_t)3500);
+        usleep(ms_to_sleep);
+        remote_accesses+=1;
+        RAY_LOG(INFO) << "CreateExisting: Generated: " << number << " Object: " << object_id << " Data size: " << data_size << " sleep for " << ms_to_sleep;
+      }
+
+      total_accesses+=1;
+
       put_requests+=1;
       RAY_LOG(INFO) << "Inside Create existing! Data size is: " << data_size;
       object_sizes.push_back(data_size);
@@ -1133,6 +1198,9 @@ Status CoreWorker::Get(const std::vector<ObjectID> &ids, const int64_t timeout_m
                        bool plasma_objects_only) {
   results->resize(ids.size(), nullptr);
 
+  for (auto it: ids)
+    RAY_LOG(INFO) << "CoreWorker::Get object id:  " << it ;
+
   absl::flat_hash_set<ObjectID> plasma_object_ids;
   absl::flat_hash_set<ObjectID> memory_object_ids(ids.begin(), ids.end());
 
@@ -1152,7 +1220,7 @@ Status CoreWorker::Get(const std::vector<ObjectID> &ids, const int64_t timeout_m
     for (auto it = result_map.begin(); it != result_map.end();) {
       auto current = it++;
       if (current->second->IsInPlasmaError()) {
-        RAY_LOG(DEBUG) << current->first << " in plasma, doing fetch-and-get";
+        RAY_LOG(DEBUG) << current->first << " go in plasma, doing fetch-and-get";
         plasma_object_ids.insert(current->first);
         // TODO[prof]: check that is looiking in plasma
         result_map.erase(current);
@@ -1180,7 +1248,8 @@ Status CoreWorker::Get(const std::vector<ObjectID> &ids, const int64_t timeout_m
 
     RAY_RETURN_NOT_OK(plasma_store_provider_->Get(plasma_object_ids, local_timeout_ms,
                                                   worker_context_, &result_map,
-                                                  &got_exception, object_sizes, &get_requests));
+                                                  &got_exception, object_sizes, &get_requests,
+                                                  &remote_accesses, &total_accesses, local_objects_cnt_));
    //auto end = std::chrono::steady_clock::now();
    //std::cout << "Total Communication with Plasma and Raylet took: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " us" << std::endl;
 
@@ -1952,7 +2021,7 @@ Status CoreWorker::AllocateReturnObjects(
     bool object_already_exists = false;
     std::shared_ptr<Buffer> data_buffer;
     if (data_sizes[i] > 0) {
-      RAY_LOG(INFO) << "Creating return object " << object_ids[i];
+      RAY_LOG(INFO) << "Creating return object " << object_ids[i] << " of size: " << data_sizes[i];
       // Mark this object as containing other object IDs. The ref counter will
       // keep the inner IDs in scope until the outer one is out of scope.
       if (!contained_object_ids[i].empty() && !options_.is_local_mode) {
@@ -2214,7 +2283,8 @@ Status CoreWorker::GetAndPinArgsForExecutor(const TaskSpecification &task,
         memory_store_->Get(by_ref_ids, -1, worker_context_, &result_map, &got_exception));
   } else {
     RAY_RETURN_NOT_OK(plasma_store_provider_->Get(by_ref_ids, -1, worker_context_,
-                                                  &result_map, &got_exception, object_sizes, &get_requests));
+                                                  &result_map, &got_exception, object_sizes, &get_requests,
+                                                  &remote_accesses, &total_accesses, local_objects_cnt_));
   }
   for (const auto &it : result_map) {
     for (size_t idx : by_ref_indices[it.first]) {
@@ -2608,6 +2678,7 @@ void CoreWorker::HandleGetCoreWorkerStats(const rpc::GetCoreWorkerStatsRequest &
   double rate_get = (double)get_requests_diff * (1000.0 / (double)duration_ms);
 
   RAY_LOG(INFO) << "timestamp: " << timestamp << ", put requests " << put_requests << ", get requests " << get_requests << ", rate put " << rate_put << ", rate get " << rate_get << ", object sizes: " << sizes ;
+  RAY_LOG(INFO) << "timestamp: " << timestamp << ", remote accesses " << remote_accesses << ", total accesses " << total_accesses ;
 
   object_sizes = {};
   last_put_requests=put_requests;

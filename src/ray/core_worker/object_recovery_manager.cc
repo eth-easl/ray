@@ -130,6 +130,9 @@ void ObjectRecoveryManager::PinExistingObjectCopy(
 void ObjectRecoveryManager::ReconstructObject(const ObjectID &object_id) {
   // Notify the task manager that we are retrying the task that created this
   // object.
+
+  RAY_LOG(INFO) << "Called ReconstructObject on object " << object_id;
+
   const auto task_id = object_id.TaskId();
   std::vector<ObjectID> task_deps;
   auto status = task_resubmitter_->ResubmitTask(task_id, &task_deps);

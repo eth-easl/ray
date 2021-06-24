@@ -20,6 +20,8 @@
 
 #include "ray/common/grpc_util.h"
 #include "ray/common/status.h"
+#include "absl/time/clock.h"
+
 
 namespace ray {
 namespace rpc {
@@ -131,6 +133,7 @@ class ServerCallImpl : public ServerCall {
         service_handler_(service_handler),
         handle_request_function_(handle_request_function),
         response_writer_(&context_),
+        last_time(0.0),
         io_service_(io_service) {}
 
   ServerCallState GetState() const override { return state_; }
@@ -139,6 +142,10 @@ class ServerCallImpl : public ServerCall {
 
   void HandleRequest() override {
     if (!io_service_.stopped()) {
+      //double now =  absl::GetCurrentTimeNanos() / 1e9;
+      //RAY_LOG(INFO) << "Handle a Request! Difference from last request: " << now-last_time << " sec";
+      //last_time=now;
+
       io_service_.post([this] { HandleRequestImpl(); });
     } else {
       // Handle service for rpc call has stopped, we must handle the call here
@@ -213,8 +220,11 @@ class ServerCallImpl : public ServerCall {
   /// The response writer.
   grpc_impl::ServerAsyncResponseWriter<Reply> response_writer_;
 
+  double last_time;
+
   /// The event loop.
   boost::asio::io_service &io_service_;
+
 
   /// The request message.
   Request request_;
@@ -227,6 +237,7 @@ class ServerCallImpl : public ServerCall {
 
   /// The callback when sending reply fails.
   std::function<void()> send_reply_failure_callback_ = nullptr;
+
 
   template <class T1, class T2, class T3, class T4>
   friend class ServerCallFactoryImpl;
@@ -306,6 +317,8 @@ class ServerCallFactoryImpl : public ServerCallFactory {
 
   /// The event loop.
   boost::asio::io_service &io_service_;
+
+  double last_time;
 };
 
 }  // namespace rpc

@@ -1284,12 +1284,21 @@ class CoreWorker : public rpc::CoreWorkerServiceHandler {
   std::atomic<int64_t> put_requests;
   std::atomic<int64_t> get_requests;
 
+  std::atomic<int64_t> remote_accesses;
+  std::atomic<int64_t> total_accesses;
+
   int64_t last_put_requests;
   int64_t last_get_requests;
+
+  /// Mapping from available objects to number of accesses to these objects
+  std::unordered_map<ObjectID, size_t> local_objects_cnt_;
+
 
   std::vector<int> object_sizes; //TODO[fot]: Add locks when accessing it
 
   int64_t last_recorded_time_ms_;
+
+  std::default_random_engine generator;
 
 };
 
