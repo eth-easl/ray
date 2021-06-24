@@ -1,7 +1,0 @@
-* Get accesses:
-
--> Most of the "get" requests are performed by the trainer - Batches to do the training => these objects are only read once
--> The workers "get" the model updates => the model updates have accesses equal to the number of workers
-
-
-

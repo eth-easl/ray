@@ -1,2 +1,0 @@
-Starting training loop. Use Ctrl-C to exit.
-step:  0
