@@ -57,7 +57,7 @@ std::pair<const ObjectBufferPool::ChunkInfo &, ray::Status> ObjectBufferPool::Ge
   std::lock_guard<std::mutex> lock(pool_mutex_);
   if (get_buffer_state_.count(object_id) == 0) {
 
-    RAY_LOG(INFO) << "object: " << object_id << "not in get_buffer_state_";
+    //RAY_LOG(INFO) << "object: " << object_id << "not in get_buffer_state_";
     plasma::ObjectBuffer object_buffer;
 
     double start_time = absl::GetCurrentTimeNanos() / 1e9;
@@ -198,8 +198,8 @@ void ObjectBufferPool::SealChunk(const ObjectID &object_id, const uint64_t chunk
     if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
 
       double end_time =  absl::GetCurrentTimeNanos() / 1e9;
-      RAY_LOG(INFO) << "Getting the object: " << object_id << " took " <<  end_time - pull_objects_start[object_id] << "sec";
-      RAY_LOG(INFO) << "Writing the object to Plasma: " << object_id << " took " << write_objects_total[object_id] << "sec";
+      RAY_LOG(DEBUG) << "Getting the object: " << object_id << " took " <<  end_time - pull_objects_start[object_id] << "sec";
+      RAY_LOG(DEBUG) << "Writing the object to Plasma: " << object_id << " took " << write_objects_total[object_id] << "sec";
       pull_objects_start.erase(object_id);
       write_objects_total.erase(object_id);
     }

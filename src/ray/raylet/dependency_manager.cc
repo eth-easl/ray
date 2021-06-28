@@ -77,7 +77,7 @@ void DependencyManager::StartOrUpdateWaitRequest(
         it->second.wait_request_id = object_manager_.Pull({ref});
 
 
-        RAY_LOG(INFO) << "Started pull for wait request for object " << obj_id
+        RAY_LOG(DEBUG) << "Started pull for wait request for object " << obj_id
                        << " request: " << it->second.wait_request_id;
       }
     }

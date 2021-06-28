@@ -477,7 +477,7 @@ void ObjectManager::SendObjectChunk(const UniqueID &push_id, const ObjectID &obj
   push_request.set_data(chunk_info.data, chunk_info.buffer_length);
   //push_request.set_data(chunk_info.data, 10);
 
-  //double end1 = absl::GetCurrentTimeNanos() / 1e9;
+  //[double end1 = absl::GetCurrentTimeNanos() / 1e9;
   //RAY_LOG(INFO) << "Preparing for pushing the object " << object_id << " took " << end1-start_time << " sec";
 
 
@@ -692,7 +692,7 @@ void ObjectManager::WaitComplete(const UniqueID &wait_id) {
   }
   wait_state.callback(found, remaining);
   active_wait_requests_.erase(wait_id);
-  RAY_LOG(INFO) << "Wait request " << wait_id << " finished: found " << found.size()
+  RAY_LOG(DEBUG) << "Wait request " << wait_id << " finished: found " << found.size()
                  << " remaining " << remaining.size();
 }
 
