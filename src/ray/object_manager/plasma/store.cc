@@ -216,7 +216,7 @@ uint8_t *PlasmaStore::AllocateMemory(size_t size, MEMFD_TYPE *fd, int64_t *map_s
     // More space is still needed. Try to spill objects to external storage to
     // make room.
     if (space_needed > 0) {
-      RAY_LOG(INFO) << "More space is needed! Space needed is: " << space_needed;
+      //RAY_LOG(INFO) << "More space is needed! Space needed is: " << space_needed;
       *error = PlasmaError::OutOfMemory;
       break;
     }
@@ -240,8 +240,6 @@ uint8_t *PlasmaStore::AllocateMemory(size_t size, MEMFD_TYPE *fd, int64_t *map_s
 PlasmaError PlasmaStore::HandleCreateObjectRequest(const std::shared_ptr<Client> &client,
                                                    const std::vector<uint8_t> &message,
                                                    PlasmaObject *object) {
-
-  RAY_LOG(INFO) << "PlasmaStore::HandleCreateObjectRequest" ;
 
   uint8_t *input = (uint8_t *)message.data();
   size_t input_size = message.size();
@@ -274,7 +272,7 @@ PlasmaError PlasmaStore::CreateObject(const ObjectID &object_id,
                                       int64_t metadata_size, int device_num,
                                       const std::shared_ptr<Client> &client,
                                       PlasmaObject *result) {
-  RAY_LOG(INFO) << "creating object " << object_id.Hex() << " size " << data_size;
+  //RAY_LOG(INFO) << "creating object " << object_id.Hex() << " size " << data_size;
 
   auto entry = GetObjectTableEntry(&store_info_, object_id);
   if (entry != nullptr) {
@@ -292,7 +290,7 @@ PlasmaError PlasmaStore::CreateObject(const ObjectID &object_id,
   if (device_num == 0) {
     PlasmaError error = PlasmaError::OK;
     pointer = AllocateMemory(total_size, &fd, &map_size, &offset, client, true, &error);
-    RAY_LOG(INFO) << "AllocateMemory of size: " << total_size << " for object " << object_id;
+    //RAY_LOG(INFO) << "AllocateMemory of size: " << total_size << " for object " << object_id;
     if (!pointer) {
       RAY_LOG(INFO) << "returned error" ;
       return error;
@@ -421,7 +419,7 @@ void PlasmaStore::ReturnFromGet(GetRequest *get_req) {
     // Send all of the file descriptors for the present objects.
     for (MEMFD_TYPE store_fd : store_fds) {
 
-      RAY_LOG(INFO) << "------------------ Send fd: " << store_fd ;
+      //RAY_LOG(INFO) << "------------------ Send fd: " << store_fd ;
       Status send_fd_status = get_req->client->SendFd(store_fd);
       if (!send_fd_status.ok()) {
         RAY_LOG(ERROR) << "Failed to send mmap results to client on fd "
@@ -440,7 +438,7 @@ void PlasmaStore::ReturnFromGet(GetRequest *get_req) {
 
 void PlasmaStore::UpdateObjectGetRequests(const ObjectID &object_id) {
 
-  RAY_LOG(INFO) << "PlasmaStore::UpdateObjectGetRequests for object: " << object_id;
+  //RAY_LOG(INFO) << "PlasmaStore::UpdateObjectGetRequests for object: " << object_id;
 
   auto it = object_get_requests_.find(object_id);
   // If there are no get requests involving this object, then return.
@@ -626,7 +624,7 @@ void PlasmaStore::SealObjects(const std::vector<ObjectID> &object_ids) {
   std::vector<ObjectInfoT> infos;
 
   for (size_t i = 0; i < object_ids.size(); ++i) {
-    RAY_LOG(INFO) << "sealing object " << object_ids[i];
+    //RAY_LOG(INFO) << "sealing object " << object_ids[i];
     ObjectInfoT object_info;
     auto entry = GetObjectTableEntry(&store_info_, object_ids[i]);
     RAY_CHECK(entry != nullptr);
@@ -720,7 +718,7 @@ void PlasmaStore::EvictObjects(const std::vector<ObjectID> &object_ids) {
     return;
   }
   for (const auto &object_id : object_ids) {
-    RAY_LOG(DEBUG) << "evicting object " << object_id.Hex();
+    //RAY_LOG(INFO) << "evicting object " << object_id.Hex();
     auto entry = GetObjectTableEntry(&store_info_, object_id);
     // TODO(rkn): This should probably not fail, but should instead throw an
     // error. Maybe we should also support deleting objects that have been
@@ -915,8 +913,8 @@ Status PlasmaStore::ProcessMessage(const std::shared_ptr<Client> &client,
       }
     } else {
       auto req_id = create_request_queue_.AddRequest(object_id, client, handle_create);
-      RAY_LOG(INFO) << "Received create request for object " << object_id
-                     << " assigned request ID " << req_id;
+      //RAY_LOG(INFO) << "Received create request for object " << object_id
+       //              << " assigned request ID " << req_id;
       ProcessCreateRequests();
       ReplyToCreateClient(client, object_id, req_id);
     }
@@ -1055,7 +1053,7 @@ void PlasmaStore::ReplyToCreateClient(const std::shared_ptr<Client> &client,
   PlasmaError error;
   bool finished = create_request_queue_.GetRequestResult(req_id, &result, &error);
   if (finished) {
-    RAY_LOG(INFO) << "Finishing create object " << object_id << " request ID " << req_id;
+    //RAY_LOG(INFO) << "Finishing create object " << object_id << " request ID " << req_id;
     if (SendCreateReply(client, object_id, result, error).ok() &&
         error == PlasmaError::OK && result.device_num == 0) {
       static_cast<void>(client->SendFd(result.store_fd));
@@ -1076,7 +1074,7 @@ bool PlasmaStore::IsObjectSpillable(const ObjectID &object_id) {
   std::lock_guard<std::recursive_mutex> guard(mutex_);
   auto entry = GetObjectTableEntry(&store_info_, object_id);
 
-  RAY_LOG(INFO) << "Object: " << object_id << " entry ref is " << entry->ref_count;
+  //RAY_LOG(INFO) << "Object: " << object_id << " entry ref is " << entry->ref_count;
 
   //entry->ref_count = 1;
   return entry->ref_count == 1;

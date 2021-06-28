@@ -22,7 +22,7 @@ namespace ray {
 void PushManager::StartPush(const NodeID &dest_id, const ObjectID &obj_id,
                             int64_t num_chunks,  std::unordered_map<ObjectID, double> &push_objects_start,
                             std::function<void(int64_t)> send_chunk_fn) {
-  RAY_LOG(INFO) << "PushManager::StartPush for object " << obj_id << "to node " << dest_id;
+  //RAY_LOG(INFO) << "PushManager::StartPush for object " << obj_id << "to node " << dest_id;
 
   auto push_id = std::make_pair(dest_id, obj_id);
   if (push_info_.contains(push_id)) {
@@ -43,12 +43,12 @@ void PushManager::OnChunkComplete(const NodeID &dest_id, const ObjectID &obj_id,
   chunks_in_flight_ -= 1;
   if (--push_info_[push_id]->chunks_remaining <= 0) {
     push_info_.erase(push_id);
-    RAY_LOG(INFO) << "Push for " << push_id.first << ", " << push_id.second
-                     << " completed, remaining: " << NumPushesInFlight();
+    //RAY_LOG(INFO) << "Push for " << push_id.first << ", " << push_id.second
+    //                 << " completed, remaining: " << NumPushesInFlight();
 
-    double end_time =  absl::GetCurrentTimeNanos() / 1e9;
-    RAY_LOG(INFO) << "Pushing the object: " << obj_id << " took " <<  end_time - push_objects_start[obj_id] << "sec";
-    RAY_LOG(INFO) << "Reading the object from Plasma: " << obj_id << " took " << read_objects_total[obj_id] << "sec";
+    //double end_time =  absl::GetCurrentTimeNanos() / 1e9;
+    //RAY_LOG(DEBUG) << "Pushing the object: " << obj_id << " took " <<  end_time - push_objects_start[obj_id] << "sec";
+    //RAY_LOG(INFO) << "Reading the object from Plasma: " << obj_id << " took " << read_objects_total[obj_id] << "sec";
     read_objects_total.erase(obj_id);
     push_objects_start.erase(obj_id);
 
@@ -73,7 +73,7 @@ void PushManager::ScheduleRemainingPushes() {
         info->chunk_send_fn(info->next_chunk_id++);
         chunks_in_flight_ += 1;
         keep_looping = true;
-        RAY_LOG(INFO) << "Sending chunk " << info->next_chunk_id << " of "
+        RAY_LOG(DEBUG) << "Sending chunk " << info->next_chunk_id << " of "
                        << info->num_chunks << " for push " << push_id.first << ", "
                        << push_id.second << ", chunks in flight " << NumChunksInFlight()
                        << " / " << max_chunks_in_flight_

@@ -50,7 +50,7 @@ void LocalObjectManager::WaitForObjectFree(const rpc::Address &owner_address,
     // response or the RPC fails (due to the owner crashing), unpin the object.
     // TODO(edoakes): we should be batching these requests instead of sending one per
     // pinned object.
-    RAY_LOG(INFO) << "WaitForObjectFree for object: " << object_id;
+    //RAY_LOG(INFO) << "WaitForObjectFree for object: " << object_id;
     rpc::WaitForObjectEvictionRequest wait_request;
     wait_request.set_object_id(object_id.Binary());
     wait_request.set_intended_worker_id(owner_address.worker_id());

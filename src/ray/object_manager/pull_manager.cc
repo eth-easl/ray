@@ -26,7 +26,7 @@ uint64_t PullManager::Pull(const std::vector<rpc::ObjectReference> &object_ref_b
                            std::vector<rpc::ObjectReference> *objects_to_locate) {
   auto bundle_it =
       pull_request_bundles_.emplace(next_req_id_++, std::move(object_ref_bundle)).first;
-  RAY_LOG(INFO) << "Start pull request " << bundle_it->first
+  RAY_LOG(DEBUG) << "Start pull request " << bundle_it->first
                  << ". Bundle size: " << bundle_it->second.objects.size();
 
   for (const auto &ref : object_ref_bundle) {
@@ -325,7 +325,8 @@ void PullManager::OnLocationChange(const ObjectID &object_id,
 
 void PullManager::TryToMakeObjectLocal(const ObjectID &object_id) {
 
-  RAY_LOG(INFO) << "Inside TryToMakeObjectLocal";
+  //:1
+  //RAY_LOG(DEBUG) << "Inside TryToMakeObjectLocal";
 
   if (object_is_local_(object_id)) {
     return;
@@ -363,7 +364,7 @@ void PullManager::TryToMakeObjectLocal(const ObjectID &object_id) {
   // sending RPCs.
   if (!request.spilled_url.empty()) {
 
-    RAY_LOG(INFO) << "About to restore object " << object_id;
+    RAY_LOG(DEBUG) << "About to restore object " << object_id;
 
     const auto spilled_node_id = request.spilled_node_id;
     restore_spilled_object_(

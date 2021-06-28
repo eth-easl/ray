@@ -1180,12 +1180,12 @@ void NodeManager::ProcessDisconnectClientMessage(
 void NodeManager::ProcessFetchOrReconstructMessage(
     const std::shared_ptr<ClientConnection> &client, const uint8_t *message_data) {
 
-  RAY_LOG(INFO) << "Raylet at NodeManager::ProcessFetchOrReconstructMessage" ;
+  //RAY_LOG(INFO) << "Raylet at NodeManager::ProcessFetchOrReconstructMessage" ;
   auto message = flatbuffers::GetRoot<protocol::FetchOrReconstruct>(message_data);
   const auto refs =
       FlatbufferToObjectReference(*message->object_ids(), *message->owner_addresses());
   if (message->fetch_only()) {
-    RAY_LOG(INFO) << "fetch_only";
+    //RAY_LOG(INFO) << "fetch_only";
     std::shared_ptr<WorkerInterface> worker = worker_pool_.GetRegisteredWorker(client);
     if (!worker) {
       worker = worker_pool_.GetRegisteredDriver(client);

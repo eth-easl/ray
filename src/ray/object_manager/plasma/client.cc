@@ -212,13 +212,10 @@ PlasmaClient::Impl::~Impl() {}
 uint8_t *PlasmaClient::Impl::GetStoreFdAndMmap(MEMFD_TYPE store_fd_val,
                                                int64_t map_size) {
   auto entry = mmap_table_.find(store_fd_val);
-  RAY_LOG(INFO) << "Map: " << store_fd_val;
   if (entry != mmap_table_.end()) {
-    RAY_LOG(INFO) << "Fd: " << store_fd_val << " already here";
     return entry->second->pointer();
   } else {
     MEMFD_TYPE fd;
-    RAY_LOG(INFO) << "New entry for fd: " << store_fd_val;
 
     RAY_CHECK_OK(store_conn_->RecvFd(&fd));
     mmap_table_[store_fd_val] =
@@ -297,7 +294,7 @@ Status PlasmaClient::Impl::HandleCreateReply(const ObjectID &object_id,
   // descriptor.
   if (object.device_num == 0) {
     // The metadata should come right after the data.
-    RAY_LOG(INFO) << "----------- Received from Plasma File Descriptor " << store_fd << " for object " << object_id << " Object offset is: " << object.data_offset;
+    //RAY_LOG(INFO) << "----------- Received from Plasma File Descriptor " << store_fd << " for object " << object_id << " Object offset is: " << object.data_offset;
     RAY_CHECK(object.metadata_offset == object.data_offset + object.data_size);
     *data = std::make_shared<PlasmaMutableBuffer>(
         shared_from_this(), GetStoreFdAndMmap(store_fd, mmap_size) + object.data_offset,
@@ -332,8 +329,8 @@ Status PlasmaClient::Impl::Create(const ObjectID &object_id,
                                   std::shared_ptr<Buffer> *data, int device_num) {
   std::lock_guard<std::recursive_mutex> guard(client_mutex_);
 
-  RAY_LOG(INFO) << "called plasma_create on conn " << store_conn_ << " with size "
-                 << data_size << " and metadata size " << metadata_size;
+  //RAY_LOG(INFO) << "called plasma_create on conn " << store_conn_ << " with size "
+    //             << data_size << " and metadata size " << metadata_size;
 
   //std::cout << "called plasma_create on conn " << store_conn_ << " with size "
   //               << data_size << " and metadata size " << metadata_size << std::endl;
@@ -358,7 +355,7 @@ Status PlasmaClient::Impl::TryCreateImmediately(
     int device_num) {
   std::lock_guard<std::recursive_mutex> guard(client_mutex_);
 
-  RAY_LOG(INFO) << "called plasma_create on conn " << store_conn_ << " with size "
+  RAY_LOG(DEBUG) << "called plasma_create on conn " << store_conn_ << " with size "
                  << data_size << " and metadata size " << metadata_size;
   RAY_RETURN_NOT_OK(SendCreateRequest(store_conn_, object_id, owner_address, data_size,
                                       metadata_size, device_num,

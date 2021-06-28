@@ -26,11 +26,16 @@ namespace ray {
 
 void BufferTracker::Record(const ObjectID &object_id, TrackedBuffer *buffer,
                            const std::string &call_site) {
+
+  //RAY_LOG(INFO) << "Add object " << object_id << " to active_buffers_  map" ;
   absl::MutexLock lock(&active_buffers_mutex_);
   active_buffers_[std::make_pair(object_id, buffer)] = call_site;
 }
 
 void BufferTracker::Release(const ObjectID &object_id, TrackedBuffer *buffer) {
+
+  //std::cout << "Release object " << object_id << " from active_buffers_map" << std::endl;
+
   absl::MutexLock lock(&active_buffers_mutex_);
   auto key = std::make_pair(object_id, buffer);
   RAY_CHECK(active_buffers_.contains(key));
@@ -334,7 +339,9 @@ Status CoreWorkerPlasmaStoreProvider::Get(
 
   // If all objects were fetched already, return.
   if (remaining.empty() || *got_exception) {
+    RAY_LOG(INFO) << "Exit FetchAndGetFromPlasmaStore" ;
     return Status::OK();
+
   }
 
   // If not all objects were successfully fetched, repeatedly call FetchOrReconstruct

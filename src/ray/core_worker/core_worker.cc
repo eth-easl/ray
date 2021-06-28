@@ -135,7 +135,7 @@ CoreWorkerProcess::CoreWorkerProcess(const CoreWorkerOptions &options)
     RAY_CHECK(options_.num_workers == 1);
   }
 
-  RAY_LOG(INFO) << "Constructing CoreWorkerProcess. pid: " << getpid();
+  RAY_LOG(DEBUG) << "Constructing CoreWorkerProcess. pid: " << getpid();
 
   // NOTE(kfstorm): any initialization depending on RayConfig must happen after this line.
   InitializeSystemConfig();
@@ -1057,7 +1057,7 @@ Status CoreWorker::CreateOwned(const std::shared_ptr<Buffer> &metadata,
                                ObjectID *object_id, std::shared_ptr<Buffer> *data) {
   *object_id = ObjectID::FromIndex(worker_context_.GetCurrentTaskID(),
                                    worker_context_.GetNextPutIndex());
-  RAY_LOG(INFO) <<  "CoreWorker::CreateOwned: " <<  *object_id << ", of node: " << NodeID::FromBinary(rpc_address_.raylet_id()) << " , of owner: " << WorkerID::FromBinary(rpc_address_.worker_id());
+  RAY_LOG(DEBUG) <<  "CoreWorker::CreateOwned: " <<  *object_id << ", of node: " << NodeID::FromBinary(rpc_address_.raylet_id()) << " , of owner: " << WorkerID::FromBinary(rpc_address_.worker_id());
 
   double perc=0.0;
   size_t g = 1000000000;
@@ -1136,7 +1136,7 @@ Status CoreWorker::CreateExisting(const std::shared_ptr<Buffer> &metadata,
       total_accesses+=1;
 
       put_requests+=1;
-      RAY_LOG(INFO) << "Inside Create existing! Data size is: " << data_size;
+      //RAY_LOG(INFO) << "Inside Create existing! Data size is: " << data_size;
       object_sizes.push_back(data_size);
     }
     return plasma_store_provider_->Create(metadata, data_size, object_id, owner_address,
@@ -1172,8 +1172,7 @@ Status CoreWorker::SealExisting(const ObjectID &object_id, bool pin_object, size
   RAY_RETURN_NOT_OK(plasma_store_provider_->Seal(object_id));
   if (pin_object) {
     // Tell the raylet to pin the object **after** it is created.
-    RAY_LOG(INFO) << "Pinning sealed object " << object_id;
-    // std::cout << "Pinning sealed object " << object_id << std::endl;
+    //RAY_LOG(INFO) << "Pinning sealed object " << object_id;
 
     local_raylet_client_->PinObjectIDs(
         owner_address.has_value() ? *owner_address : rpc_address_, {object_id},
@@ -1198,8 +1197,8 @@ Status CoreWorker::Get(const std::vector<ObjectID> &ids, const int64_t timeout_m
                        bool plasma_objects_only) {
   results->resize(ids.size(), nullptr);
 
-  for (auto it: ids)
-    RAY_LOG(INFO) << "CoreWorker::Get object id:  " << it ;
+  // for (auto it: ids)
+  //   RAY_LOG(INFO) << "CoreWorker::Get object id:  " << it ;
 
   absl::flat_hash_set<ObjectID> plasma_object_ids;
   absl::flat_hash_set<ObjectID> memory_object_ids(ids.begin(), ids.end());
@@ -1281,6 +1280,8 @@ Status CoreWorker::Get(const std::vector<ObjectID> &ids, const int64_t timeout_m
   if (timeout_ms < 0 && !will_throw_exception) {
     RAY_CHECK(!missing_result);
   }
+
+  //std::cout << "Exit Get!" << std::endl;
 
   return Status::OK();
 }
@@ -1516,7 +1517,7 @@ Status CoreWorker::SpillObjects(const std::vector<ObjectID> &object_ids) {
   };
 
   for (const auto &object_id : object_ids) {
-    RAY_LOG(INFO) << "Requesting spill for object " << object_id;
+    //RAY_LOG(INFO) << "Requesting spill for object " << object_id;
     // Acquire a temporary reference to make sure that the object is still in
     // scope by the time we register the callback to spill the object.
     // Otherwise, the callback may never get called.
@@ -1724,7 +1725,7 @@ Status CoreWorker::CreatePlacementGroup(
       worker_context_.GetCurrentActorID(), worker_context_.CurrentActorDetached());
   PlacementGroupSpecification placement_group_spec = builder.Build();
   *return_placement_group_id = placement_group_id;
-  RAY_LOG(INFO) << "Submitting Placement Group creation to GCS: " << placement_group_id;
+  //RAY_LOG(INFO) << "Submitting Placement Group creation to GCS: " << placement_group_id;
   RAY_UNUSED(gcs_client_->PlacementGroups().AsyncCreatePlacementGroup(
       placement_group_spec,
       [status_promise](const Status &status) { status_promise->set_value(status); }));
@@ -2021,7 +2022,7 @@ Status CoreWorker::AllocateReturnObjects(
     bool object_already_exists = false;
     std::shared_ptr<Buffer> data_buffer;
     if (data_sizes[i] > 0) {
-      RAY_LOG(INFO) << "Creating return object " << object_ids[i] << " of size: " << data_sizes[i];
+      //RAY_LOG(INFO) << "Creating return object " << object_ids[i] << " of size: " << data_sizes[i];
       // Mark this object as containing other object IDs. The ref counter will
       // keep the inner IDs in scope until the outer one is out of scope.
       if (!contained_object_ids[i].empty() && !options_.is_local_mode) {
@@ -2120,7 +2121,7 @@ Status CoreWorker::ExecuteTask(const TaskSpecification &task_spec,
     if (return_objects->at(i)->GetData() != nullptr &&
         return_objects->at(i)->GetData()->IsPlasmaBuffer()) {
       // TODO[fot]: Check this!
-      RAY_LOG(INFO) << "Sealing object " << return_ids[i] ;
+      //RAY_LOG(INFO) << "Sealing object " << return_ids[i] ;
       if (!SealExisting(return_ids[i], /*pin_object=*/true, 0, caller_address).ok()) {
         RAY_LOG(FATAL) << "Task " << task_spec.TaskId() << " failed to seal object "
                        << return_ids[i] << " in store: " << status.message();
@@ -2451,7 +2452,7 @@ void CoreWorker::HandleWaitForObjectEviction(
 
   // Send a response to trigger unpinning the object when it is no longer in scope.
   auto respond = [send_reply_callback](const ObjectID &object_id) {
-    RAY_LOG(INFO) << "Replying to HandleWaitForObjectEviction for " << object_id;
+    //RAY_LOG(INFO) << "Replying to HandleWaitForObjectEviction for " << object_id;
     send_reply_callback(Status::OK(), nullptr, nullptr);
   };
 
@@ -2658,6 +2659,10 @@ void CoreWorker::HandleGetCoreWorkerStats(const rpc::GetCoreWorkerStatsRequest &
                                           rpc::GetCoreWorkerStatsReply *reply,
                                           rpc::SendReplyCallback send_reply_callback) {
   absl::MutexLock lock(&mutex_);
+  uint64_t current_time = current_time_ms();
+
+
+  /*
   int64_t timestamp = current_sys_time_ms();
 
   std::string sizes = "";
@@ -2679,6 +2684,7 @@ void CoreWorker::HandleGetCoreWorkerStats(const rpc::GetCoreWorkerStatsRequest &
 
   RAY_LOG(INFO) << "timestamp: " << timestamp << ", put requests " << put_requests << ", get requests " << get_requests << ", rate put " << rate_put << ", rate get " << rate_get << ", object sizes: " << sizes ;
   RAY_LOG(INFO) << "timestamp: " << timestamp << ", remote accesses " << remote_accesses << ", total accesses " << total_accesses ;
+  */
 
   object_sizes = {};
   last_put_requests=put_requests;
@@ -2746,10 +2752,10 @@ void CoreWorker::HandleLocalGC(const rpc::LocalGCRequest &request,
 void CoreWorker::HandleSpillObjects(const rpc::SpillObjectsRequest &request,
                                     rpc::SpillObjectsReply *reply,
                                     rpc::SendReplyCallback send_reply_callback) {
-  RAY_LOG(INFO) << "Inside HandleSpillObjects";
+  //RAY_LOG(INFO) << "Inside HandleSpillObjects";
   if (options_.spill_objects != nullptr) {
 
-    RAY_LOG(INFO) << "----------------------- options_.spill_objects is not null" ;
+    //RAY_LOG(INFO) << "----------------------- options_.spill_objects is not null" ;
     std::vector<ObjectID> object_ids_to_spill;
     object_ids_to_spill.reserve(request.object_ids_to_spill_size());
     for (const auto &id_binary : request.object_ids_to_spill()) {
@@ -2802,7 +2808,7 @@ void CoreWorker::HandleRestoreSpilledObjects(
     std::vector<ObjectID> object_ids_to_restore;
     object_ids_to_restore.reserve(request.object_ids_to_restore_size());
 
-    RAY_LOG(INFO) << "Inside CoreWorker::HandleRestoreSpilledObjects. About to restore " << request.object_ids_to_restore_size() << " objects";
+    //RAY_LOG(INFO) << "Inside CoreWorker::HandleRestoreSpilledObjects. About to restore " << request.object_ids_to_restore_size() << " objects";
 
     for (const auto &id_binary : request.object_ids_to_restore()) {
       object_ids_to_restore.push_back(ObjectID::FromBinary(id_binary));

@@ -38,7 +38,7 @@ class MockExporter : public opencensus::stats::StatsExporter::Handler {
       const std::vector<std::pair<opencensus::stats::ViewDescriptor,
                                   opencensus::stats::ViewData>> &data) override {
 
-    std::cout << "ExportViewData" << std::endl;
+    //std::cout << "ExportViewData" << std::endl;
 
     for (const auto &datum : data) {
       auto &descriptor = datum.first;

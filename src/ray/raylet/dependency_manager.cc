@@ -51,7 +51,7 @@ void DependencyManager::StartOrUpdateWaitRequest(
     const WorkerID &worker_id,
     const std::vector<rpc::ObjectReference> &required_objects) {
 
-  RAY_LOG(INFO) << "***********  Raylet: DependencyManager::StartOrUpdateWaitRequest from worker " << worker_id;
+  //RAY_LOG(INFO) << "***********  Raylet: DependencyManager::StartOrUpdateWaitRequest from worker " << worker_id;
 
 
   auto &wait_request = wait_requests_[worker_id];
@@ -59,8 +59,8 @@ void DependencyManager::StartOrUpdateWaitRequest(
     const auto obj_id = ObjectRefToId(ref);
     if (local_objects_.count(obj_id)) {
       // Object is already local. No need to fetch it.
-      RAY_LOG(INFO) << "Object " << obj_id << "is local";
-      local_objects_cnt_[obj_id]+=1;
+      //RAY_LOG(INFO) << "Object " << obj_id << "is local";
+      //local_objects_cnt_[obj_id]+=1;
       object_manager_.AddLocalGet(obj_id);
       continue;
     }
@@ -268,12 +268,10 @@ std::vector<TaskID> DependencyManager::HandleObjectMissing(
 
 std::vector<TaskID> DependencyManager::HandleObjectLocal(const ray::ObjectID &object_id) {
 
-  std::cout << "***********  Raylet: DependencyManager::HandleObjectLocal object:" << object_id << std::endl;
-
   // Add the object to the table of locally available objects.
   auto inserted = local_objects_.insert(object_id);
   RAY_CHECK(inserted.second) << "Local object was already local " << object_id;
-  local_objects_cnt_[object_id] = 1;
+  //local_objects_cnt_[object_id] = 1;
 
   // Find all tasks and workers that depend on the newly available object.
   std::vector<TaskID> ready_task_ids;

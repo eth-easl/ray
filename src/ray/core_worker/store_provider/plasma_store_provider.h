@@ -68,7 +68,9 @@ class TrackedBuffer : public Buffer {
 
   bool IsPlasmaBuffer() const override { return true; }
 
-  ~TrackedBuffer() { tracker_->Release(object_id_, this); }
+  ~TrackedBuffer() {
+    //std::cout << "TrackedBuffer deconstructor, Release" << std::endl;
+    tracker_->Release(object_id_, this); }
 
  private:
   /// shared_ptr to a buffer which can potentially hold a reference

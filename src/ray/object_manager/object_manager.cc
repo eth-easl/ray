@@ -416,7 +416,7 @@ void ObjectManager::Push(const ObjectID &object_id, const NodeID &node_id) {
     owner_address.set_port(object_info.owner_port);
     owner_address.set_worker_id(object_info.owner_worker_id);
 
-    RAY_LOG(INFO) << "Sending object chunks of " << object_id << " to node " << node_id
+    RAY_LOG(DEBUG) << "Sending object chunks of " << object_id << " to node " << node_id
                    << ", number of chunks: " << num_chunks
                    << ", total data size: " << data_size;
 
@@ -477,12 +477,12 @@ void ObjectManager::SendObjectChunk(const UniqueID &push_id, const ObjectID &obj
   push_request.set_data(chunk_info.data, chunk_info.buffer_length);
   //push_request.set_data(chunk_info.data, 10);
 
-  double end1 = absl::GetCurrentTimeNanos() / 1e9;
-  RAY_LOG(INFO) << "Preparing for pushing the object " << object_id << " took " << end1-start_time << " sec";
+  //double end1 = absl::GetCurrentTimeNanos() / 1e9;
+  //RAY_LOG(INFO) << "Preparing for pushing the object " << object_id << " took " << end1-start_time << " sec";
 
 
-  std::thread::id this_id = std::this_thread::get_id();
-  RAY_LOG(INFO) << "Thread: " <<  this_id << " Sending object " << object_id << ", chunk " << chunk_index << ". From start have passed " << end1 - push_objects_start[object_id] << " sec";
+  //std::thread::id this_id = std::this_thread::get_id();
+  //RAY_LOG(INFO) << "Thread: " <<  this_id << " Sending object " << object_id << ", chunk " << chunk_index << ". From start have passed " << end1 - push_objects_start[object_id] << " sec";
 
   // record the time cost between send chunk and receive reply
   rpc::ClientCallback<rpc::PushReply> callback =
@@ -712,7 +712,7 @@ void ObjectManager::HandlePush(const rpc::PushRequest &request, rpc::PushReply *
   double start_time = absl::GetCurrentTimeNanos() / 1e9;
   std::thread::id this_id = std::this_thread::get_id();
 
-  RAY_LOG(INFO) << "Thread: " << this_id << " Receiving object " << object_id << ", chunk " << chunk_index << ". From start have passed " << start_time - pull_objects_start[object_id] << " sec";
+  RAY_LOG(DEBUG) << "Thread: " << this_id << " Receiving object " << object_id << ", chunk " << chunk_index << ". From start have passed " << start_time - pull_objects_start[object_id] << " sec";
 
 
   // if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
@@ -741,7 +741,7 @@ void ObjectManager::HandlePush(const rpc::PushRequest &request, rpc::PushReply *
   //    write_objects_total[object_id] += end_time - start_time;
   // }
 
-  RAY_LOG(INFO) << "ReceiveObjectChunk (Chunk Creation etc. ) took " << end_time - start_time << "sec";
+  //RAY_LOG(INFO) << "ReceiveObjectChunk (Chunk Creation etc. ) took " << end_time - start_time << "sec";
 
 
   HandleReceiveFinished(object_id, node_id, chunk_index, start_time, end_time);
@@ -753,7 +753,7 @@ bool ObjectManager::ReceiveObjectChunk(const NodeID &node_id, const ObjectID &ob
                                        uint64_t data_size, uint64_t metadata_size,
                                        uint64_t chunk_index, const std::string &data) {
   num_chunks_received_total_++;
-  RAY_LOG(INFO) << "ReceiveObjectChunk on " << self_node_id_ << " from " << node_id
+  RAY_LOG(DEBUG) << "ReceiveObjectChunk on " << self_node_id_ << " from " << node_id
                  << " of object " << object_id << " chunk index: " << chunk_index
                  << ", chunk data size: " << data.size()
                  << ", object size: " << data_size;

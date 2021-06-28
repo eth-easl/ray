@@ -4589,7 +4589,7 @@ void* dlmalloc(size_t bytes) {
   */
 
 
-  printf("----------------------- Inside dlmalloc!\n");
+  //printf("----------------------- Inside dlmalloc!\n");
 
 #if USE_LOCKS
   ensure_initialization(); /* initialize in sys_alloc if not using locks */
@@ -4661,7 +4661,7 @@ void* dlmalloc(size_t bytes) {
       }
     }
 
-    printf("------------ gm->dvsize is: %lu\n", gm->dvsize);
+    //printf("------------ gm->dvsize is: %lu\n", gm->dvsize);
 
     if (nb <= gm->dvsize) {
 
@@ -5289,7 +5289,7 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
 
 void* dlmemalign(size_t alignment, size_t bytes) {
 
-  printf("------------------------ dlmemalign with size: %lu\n", bytes);
+  //printf("------------------------ dlmemalign with size: %lu\n", bytes);
   if (alignment <= MALLOC_ALIGNMENT) {
     return dlmalloc(bytes);
   }

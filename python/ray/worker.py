@@ -342,6 +342,8 @@ class Worker:
                         ray_constants.OBJECT_METADATA_DEBUG_PREFIX):]
 
         start = time.time()
+
+        #print("deserialize objects!")
         res = self.deserialize_objects(data_metadata_pairs,
                                         object_refs), debugger_breakpoint
         end = time.time()
@@ -716,7 +718,7 @@ def init(
             redis_max_clients=None,
             redis_password=_redis_password,
             plasma_directory=_plasma_directory,
-            huge_pages=None,
+            huge_pages=False,
             include_dashboard=include_dashboard,
             dashboard_host=dashboard_host,
             dashboard_port=dashboard_port,

@@ -125,9 +125,9 @@ void EvictionPolicy::ClientDisconnected(Client *client) {}
 int64_t EvictionPolicy::RequireSpace(int64_t size,
                                      std::vector<ObjectID> *objects_to_evict) {
   // Check if there is enough space to create the object.
-  // RAY_LOG(INFO) << "Inside  EvictionPolicy::RequireSpace. Object size is  " << size;
-  // RAY_LOG(INFO) << "PlasmaAllocator::Allocated() size is  " << PlasmaAllocator::Allocated();
-  // RAY_LOG(INFO) << "PlasmaAllocator::GetFootprintLimit() size is  " << PlasmaAllocator::GetFootprintLimit();
+  //RAY_LOG(INFO) << "Inside  EvictionPolicy::RequireSpace. Object size is  " << size;
+  //RAY_LOG(INFO) << "PlasmaAllocator::Allocated() size is  " << PlasmaAllocator::Allocated();
+  //RAY_LOG(INFO) << "PlasmaAllocator::GetFootprintLimit() size is  " << PlasmaAllocator::GetFootprintLimit();
 
   int64_t required_space =
       PlasmaAllocator::Allocated() + size - PlasmaAllocator::GetFootprintLimit();
