@@ -60,18 +60,18 @@ std::pair<const ObjectBufferPool::ChunkInfo &, ray::Status> ObjectBufferPool::Ge
     //RAY_LOG(INFO) << "object: " << object_id << "not in get_buffer_state_";
     plasma::ObjectBuffer object_buffer;
 
-    double start_time = absl::GetCurrentTimeNanos() / 1e9;
+    //double start_time = absl::GetCurrentTimeNanos() / 1e9;
 
     // TODO[fot]: measure time here! for all chunks of the object!
     RAY_CHECK_OK(
         store_client_.Get(&object_id, 1, 0, &object_buffer, /*is_from_worker=*/false));
-    double end_time = absl::GetCurrentTimeNanos() / 1e9;
-    if (read_objects_total.find(object_id) == read_objects_total.end()) {
-      read_objects_total[object_id] = end_time - start_time;
-    }
-    else {
-       read_objects_total[object_id] += end_time - start_time;
-    }
+    //double end_time = absl::GetCurrentTimeNanos() / 1e9;
+    // if (read_objects_total.find(object_id) == read_objects_total.end()) {
+    //   read_objects_total[object_id] = end_time - start_time;
+    // }
+    // else {
+    //    read_objects_total[object_id] += end_time - start_time;
+    // }
 
     if (object_buffer.data == nullptr) {
       RAY_LOG(INFO)
@@ -195,14 +195,14 @@ void ObjectBufferPool::SealChunk(const ObjectID &object_id, const uint64_t chunk
     RAY_LOG(INFO) << "Have received all chunks for object " << object_id
                    << ", last chunk index: " << chunk_index;
 
-    if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
+    /*if (pull_objects_start.find(object_id) != pull_objects_start.end()) {
 
       double end_time =  absl::GetCurrentTimeNanos() / 1e9;
       RAY_LOG(DEBUG) << "Getting the object: " << object_id << " took " <<  end_time - pull_objects_start[object_id] << "sec";
       RAY_LOG(DEBUG) << "Writing the object to Plasma: " << object_id << " took " << write_objects_total[object_id] << "sec";
       pull_objects_start.erase(object_id);
       write_objects_total.erase(object_id);
-    }
+    }*/
 
   }
 

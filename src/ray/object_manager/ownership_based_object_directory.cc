@@ -147,7 +147,7 @@ ray::Status OwnershipBasedObjectDirectory::ReportObjectAdded(
                          << ", the object has most likely been freed: "
                          << status.ToString();
         } else {
-          RAY_LOG(INFO) << "Added location " << node_id << " for object " << object_id
+          RAY_LOG(DEBUG) << "Added location " << node_id << " for object " << object_id
                          << " on owner " << worker_id;
         }
       });

@@ -1647,9 +1647,9 @@ void NodeManager::FinishAssignedActorCreationTask(WorkerInterface &worker,
 void NodeManager::HandleObjectLocal(const ObjectID &object_id) {
   // Notify the task dependency manager that this object is local.
   const auto ready_task_ids = dependency_manager_.HandleObjectLocal(object_id);
-  RAY_LOG(INFO) << "Object local " << object_id << ", "
-                 << " on " << self_node_id_ << ", " << ready_task_ids.size()
-                 << " tasks ready";
+  // RAY_LOG(DEBUG) << "Object local " << object_id << ", "
+  //                << " on " << self_node_id_ << ", " << ready_task_ids.size()
+  //                << " tasks ready";
   cluster_task_manager_->TasksUnblocked(ready_task_ids);
 }
 

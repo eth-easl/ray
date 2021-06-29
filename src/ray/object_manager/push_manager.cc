@@ -49,8 +49,8 @@ void PushManager::OnChunkComplete(const NodeID &dest_id, const ObjectID &obj_id,
     //double end_time =  absl::GetCurrentTimeNanos() / 1e9;
     //RAY_LOG(DEBUG) << "Pushing the object: " << obj_id << " took " <<  end_time - push_objects_start[obj_id] << "sec";
     //RAY_LOG(INFO) << "Reading the object from Plasma: " << obj_id << " took " << read_objects_total[obj_id] << "sec";
-    read_objects_total.erase(obj_id);
-    push_objects_start.erase(obj_id);
+    //read_objects_total.erase(obj_id);
+    //push_objects_start.erase(obj_id);
 
   }
   ScheduleRemainingPushes();
