@@ -134,7 +134,7 @@ RESOURCE_CONSTRAINT_PREFIX = "accelerator_type:"
 RESOURCES_ENVIRONMENT_VARIABLE = "RAY_OVERRIDE_RESOURCES"
 
 # The reporter will report its statistics this often (milliseconds).
-REPORTER_UPDATE_INTERVAL_MS = env_integer("REPORTER_UPDATE_INTERVAL_MS", 2500)
+REPORTER_UPDATE_INTERVAL_MS = env_integer("REPORTER_UPDATE_INTERVAL_MS", 1000)
 
 # Number of attempts to ping the Redis server. See
 # `services.py:wait_for_redis_to_start`.

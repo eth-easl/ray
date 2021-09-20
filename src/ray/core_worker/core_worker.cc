@@ -1137,7 +1137,7 @@ Status CoreWorker::CreateExisting(const std::shared_ptr<Buffer> &metadata,
 
       put_requests+=1;
       //RAY_LOG(INFO) << "Inside Create existing! Data size is: " << data_size;
-      object_sizes.push_back(data_size);
+      //object_sizes.push_back(data_size);
     }
     return plasma_store_provider_->Create(metadata, data_size, object_id, owner_address,
                                           data);
@@ -1148,7 +1148,7 @@ Status CoreWorker::SealOwned(const ObjectID &object_id, bool pin_object, size_t 
 
 
   put_requests+=1;
-  object_sizes.push_back(obj_size);
+  //object_sizes.push_back(obj_size);
 
 
 //  auto start = std::chrono::steady_clock::now();

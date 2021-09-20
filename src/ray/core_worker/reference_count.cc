@@ -687,7 +687,7 @@ bool ReferenceCounter::GetAndClearLocalBorrowersInternal(const ObjectID &object_
 void ReferenceCounter::MergeRemoteBorrowers(const ObjectID &object_id,
                                             const rpc::WorkerAddress &worker_addr,
                                             const ReferenceTable &borrowed_refs) {
-  RAY_LOG(INFO) << "Merging ref " << object_id;
+  //RAY_LOG(INFO) << "Merging ref " << object_id;
   auto borrower_it = borrowed_refs.find(object_id);
   if (borrower_it == borrowed_refs.end()) {
     return;
